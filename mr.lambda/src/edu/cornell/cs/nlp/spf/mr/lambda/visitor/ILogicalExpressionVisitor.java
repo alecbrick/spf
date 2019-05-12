@@ -17,11 +17,7 @@
 package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
 import edu.cornell.cs.nlp.spf.mr.IMeaningRepresentationVisitor;
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 public interface ILogicalExpressionVisitor extends
 		IMeaningRepresentationVisitor {
@@ -32,7 +28,12 @@ public interface ILogicalExpressionVisitor extends
 
 	void visit(LogicalConstant logicalConstant);
 
-	default void visit(LogicalExpression logicalExpression) {
+	default void visit(ContinuationTower continuationTower) {
+		continuationTower.getTop().accept(this);
+		continuationTower.getBottom().accept(this);
+	}
+
+    default void visit(LogicalExpression logicalExpression) {
 		logicalExpression.accept(this);
 	}
 

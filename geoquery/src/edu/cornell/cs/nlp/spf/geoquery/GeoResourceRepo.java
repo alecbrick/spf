@@ -28,6 +28,7 @@ import edu.cornell.cs.nlp.spf.genlex.ccg.template.TemplateSupervisedGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationGenlex;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.UnificationModelInit;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.Splitter;
+import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.TowerSplitter;
 import edu.cornell.cs.nlp.spf.learn.validation.perceptron.ValidationPerceptron;
 import edu.cornell.cs.nlp.spf.learn.validation.stocgrad.ValidationStocGrad;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
@@ -55,6 +56,11 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.typeraising.ForwardTypeRai
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.typeshifting.PrepositionTypeShifting;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ApplicationCreator;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.CompositionCreator;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.BaseRuleListCreator;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.TowerRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftRight;
 import edu.cornell.cs.nlp.spf.test.Tester;
 
 public class GeoResourceRepo extends ResourceCreatorRepository {
@@ -66,6 +72,11 @@ public class GeoResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(new ForwardTypeRaisedComposition.Creator());
 		registerResourceCreator(new ThatlessRelative.Creator());
 		registerResourceCreator(new PluralExistentialTypeShifting.Creator());
+		registerResourceCreator(new BaseRuleListCreator());
+		registerResourceCreator(new Combination.Creator());
+		registerResourceCreator(new LiftLeft.Creator());
+		registerResourceCreator(new LiftRight.Creator());
+		registerResourceCreator(new TowerRule.Creator<LogicalExpression>());
 		registerResourceCreator(
 				new MultiCKYParser.Creator<Sentence, LogicalExpression>());
 		registerResourceCreator(new SimpleFullParseFilter.Creator());
@@ -102,6 +113,7 @@ public class GeoResourceRepo extends ResourceCreatorRepository {
 		registerResourceCreator(
 				new UnificationGenlex.Creator<Sentence, SingleSentence>());
 		registerResourceCreator(new Splitter.Creator());
+		registerResourceCreator(new TowerSplitter.Creator());
 		registerResourceCreator(new UnificationModelInit.Creator());
 		registerResourceCreator(new LexemeCooccurrenceScorer.Creator());
 		registerResourceCreator(

@@ -17,16 +17,13 @@ import java.util.stream.Collectors;
 import com.google.common.base.Function;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
+import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax.SimpleSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 import edu.cornell.cs.nlp.utils.collections.CollectionUtils;
@@ -152,6 +149,22 @@ public class FactoringServices {
 				}
 			} else {
 				return syntax;
+			}
+		} else if (syntax instanceof TowerSyntax) {
+			final TowerSyntax tower = (TowerSyntax) syntax;
+			final Syntax left = abstractSyntaxAttributes(tower.getLeft(), indexedAttributes);
+            final Syntax right = abstractSyntaxAttributes(tower.getRight(), indexedAttributes);
+			final Syntax base = abstractSyntaxAttributes(tower.getBase(), indexedAttributes);
+
+			assert left != null;
+			assert right != null;
+			assert base != null;
+			if (left == tower.getLeft() &&
+					right == tower.getRight() &&
+					base == tower.getBase()) {
+				return tower;
+			} else {
+				return new TowerSyntax(base, left, right);
 			}
 		} else {
 			throw new RuntimeException("unexpected syntax class");
@@ -454,6 +467,70 @@ public class FactoringServices {
 					tempReturn.add(factoringPair);
 				}
 
+			}
+		}
+
+		@Override
+        // Similar logic to Literals.
+		public void visit(ContinuationTower tower) {
+		    List<Pair<Placeholders, ? extends LogicalExpression>> tempList =
+					new ArrayList<>();
+			tower.getTop().accept(this);
+			List<Pair<Placeholders, ? extends LogicalExpression>> topReturn =
+					tempReturn;
+
+			tower.getBottom().accept(this);
+			List<Pair<Placeholders, ? extends LogicalExpression>> bottomReturn =
+					tempReturn;
+
+			if (doMaximal) {
+				final Pair<Placeholders, ? extends LogicalExpression> topPair = getAndRemoveMaximal(
+						topReturn);
+				final Pair<Placeholders, ? extends LogicalExpression> bottomPair = getAndRemoveMaximal(
+						bottomReturn);
+
+				final Placeholders placeholder = topPair.first();
+				placeholder.concat(bottomPair.first());
+
+				if (topPair.second() != tower.getTop() ||
+						bottomPair.second() != tower.getBottom()) {
+					tempReturn.add(Pair.of(
+							placeholder,
+							new ContinuationTower(
+									(Lambda) topPair.second(),
+									bottomPair.second()
+							)
+					));
+				} else {
+					tempReturn.add(Pair.of( placeholder, tower ));
+				}
+			}
+
+			if (doPartial) {
+				for (final Pair<Placeholders, ? extends LogicalExpression> topPair : topReturn) {
+					for (final Pair<Placeholders, ? extends LogicalExpression> bottomPair : bottomReturn) {
+						final Placeholders placeholder = topPair.first();
+						placeholder.concat(bottomPair.first());
+						if (placeholder.size() <= partialMaxConstants) {
+							if (topPair.second() != tower.getTop() ||
+                            		bottomPair.second() != tower.getBottom()) {
+								tempReturn.add(
+										Pair.of(
+												placeholder,
+												new ContinuationTower(
+														(Lambda) topPair.second(),
+														bottomPair.second()
+												)
+										)
+								);
+							} else {
+								tempReturn.add(
+										Pair.of(placeholder, tower)
+								);
+							}
+						}
+					}
+				}
 			}
 		}
 

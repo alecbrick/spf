@@ -239,6 +239,8 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 						continue;
 					}
 
+					LOG.info("Step I time: %.4fsec", (System.currentTimeMillis() - startTime) / 1000.0);
+
 					// ///////////////////////////
 					// Step II: Generate new lexical entries, prune and update
 					// the model. Keep the parser output for Step III.
@@ -251,6 +253,8 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 
 					final PO generationParserOutput = lexicalInduction(dataItem,
 							itemCounter, dataItemModel, model, epochNumber);
+
+					LOG.info("Step II time: %.4fsec", (System.currentTimeMillis() - startTime) / 1000.0);
 
 					// ///////////////////////////
 					// Step III: Update parameters
@@ -275,6 +279,7 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 								prunedParserOutput, model, itemCounter,
 								epochNumber);
 					}
+					LOG.info("Step III time: %.4fsec", (System.currentTimeMillis() - startTime) / 1000.0);
 
 				} finally {
 					// Record statistics.
@@ -308,9 +313,12 @@ public abstract class AbstractLearner<SAMPLE extends IDataItem<?>, DI extends IL
 	private PO lexicalInduction(final DI dataItem, int dataItemNumber,
 			IDataItemModel<MR> dataItemModel, Model<SAMPLE, MR> model,
 			int epochNumber) {
+		long startTime = System.currentTimeMillis();
 		// Generate lexical entries
 		final ILexiconImmutable<MR> generatedLexicon = genlex.generate(dataItem,
 				model, categoryServices);
+
+		LOG.info("Lexicon generation time: %.4fsec", (System.currentTimeMillis() - startTime) / 1000.0);
 		LOG.info("Generated lexicon size = %d", generatedLexicon.size());
 
 		if (generatedLexicon.size() > 0) {

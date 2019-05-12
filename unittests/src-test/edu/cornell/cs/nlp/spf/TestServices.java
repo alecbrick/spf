@@ -18,22 +18,35 @@ package edu.cornell.cs.nlp.spf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.FlexibleTypeComparator;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.SkolemServices;
+import edu.cornell.cs.nlp.spf.ccg.categories.ITowerCategoryServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.IRecursiveBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.BackwardApplication;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ForwardApplication;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.BackwardComposition;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.ForwardComposition;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftRight;
 
 public class TestServices {
 
 	public static final LogicalExpressionCategoryServices	CATEGORY_SERVICES;
+	public static final TowerCategoryServices				TOWER_CATEGORY_SERVICES;
 
 	public static final List<File>							DEFAULT_ONTOLOGY_FILES;
 	public static final File								DEFAULT_TYPES_FILE;
+
+	public static final List<IBinaryParseRule<LogicalExpression>> BASE_RULES;
+	public static final List<IRecursiveBinaryParseRule<LogicalExpression>> RECURSIVE_RULES;
 
 	private TestServices() {
 		// Private ctor. Nothing to init. Service class.
@@ -77,7 +90,18 @@ public class TestServices {
 		// CCG LogicalExpression category services for handling categories
 		// with LogicalExpression as semantics
 		CATEGORY_SERVICES = new LogicalExpressionCategoryServices(true);
+		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true);
 
+		BASE_RULES = new ArrayList<>();
+		BASE_RULES.add(new ForwardApplication<>(CATEGORY_SERVICES));
+		BASE_RULES.add(new BackwardApplication<>(CATEGORY_SERVICES));
+		BASE_RULES.add(new ForwardComposition<>(CATEGORY_SERVICES, 1, false));
+		BASE_RULES.add(new BackwardComposition<>(CATEGORY_SERVICES, 1, false));
+
+		RECURSIVE_RULES = new ArrayList<>();
+		RECURSIVE_RULES.add(new Combination<>("C", TOWER_CATEGORY_SERVICES, BASE_RULES));
+		RECURSIVE_RULES.add(new LiftLeft<>("^", TOWER_CATEGORY_SERVICES, BASE_RULES));
+		RECURSIVE_RULES.add(new LiftRight<>("^", TOWER_CATEGORY_SERVICES, BASE_RULES));
 	}
 
 	public static LogicalExpressionCategoryServices getCategoryServices() {
@@ -86,5 +110,17 @@ public class TestServices {
 
 	public static void init() {
 		// Nothing to do.
+	}
+
+	public static ITowerCategoryServices<LogicalExpression> getTowerCategoryServices() {
+	    return TOWER_CATEGORY_SERVICES;
+	}
+
+	public static List<IBinaryParseRule<LogicalExpression>> getBaseRules() {
+		return BASE_RULES;
+	}
+
+	public static List<IRecursiveBinaryParseRule<LogicalExpression>> getRecursiveRules() {
+		return RECURSIVE_RULES;
 	}
 }

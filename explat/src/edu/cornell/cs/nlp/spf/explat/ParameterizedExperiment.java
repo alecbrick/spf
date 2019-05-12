@@ -49,6 +49,9 @@ public abstract class ParameterizedExperiment implements IResourceRepository {
 
 	public static final String				ONTOLOGY_RESOURCE			= "ontology";
 	public static final String				PARSER_RESOURCE				= "parser";
+	public static final String 				TOWER_CATEGORY_SERVICES_RESOURCE
+																		= "towerCategoryServices";
+	public static final String				BINARY_RULES_RESOURCE		= "binaryRules";
 	private static final String				INCLUDE_DIRECTIVE			= "include";
 	private static final Pattern			LINE_REPEAT_PATTERN			= new Pattern(
 			"\\[({var}\\w+)=({start}\\d+)-({end}\\d+)\\]\\s+({rest}.+)$");

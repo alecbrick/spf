@@ -47,6 +47,7 @@ import edu.cornell.cs.nlp.spf.parser.ISentenceLexiconGenerator;
 import edu.cornell.cs.nlp.spf.parser.ParsingOp;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.AbstractCKYParser;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.CKYBinaryParsingRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.cky.CKYRecursiveBinaryParsingRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.CKYUnaryParsingRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.chart.AbstractCellFactory;
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.chart.Cell;
@@ -58,12 +59,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.cky.sloppy.SimpleWordSkippingLexicalGen
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IDataItemModel;
 import edu.cornell.cs.nlp.spf.parser.ccg.normalform.NormalFormValidator;
 import edu.cornell.cs.nlp.spf.parser.ccg.normalform.unaryconstraint.UnaryConstraint;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.BinaryRuleSet;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.ILexicalRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IUnaryParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.LexicalRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.UnaryRuleSet;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 import edu.cornell.cs.nlp.utils.collections.SetUtils;
 import edu.cornell.cs.nlp.utils.composites.Pair;
 import edu.cornell.cs.nlp.utils.filter.FilterUtils;
@@ -543,7 +539,10 @@ public class MultiCKYParser<DI extends Sentence, MR>
 		@SuppressWarnings("unchecked")
 		protected void addRule(Builder<DI, MR> builder, Object rule,
 				NormalFormValidator nfValidator, Parameters params) {
-			if (rule instanceof IBinaryParseRule) {
+			if (rule instanceof IRecursiveBinaryParseRule) {
+				builder.addParseRule(new CKYRecursiveBinaryParsingRule<MR>(
+						(IRecursiveBinaryParseRule<MR>) rule, nfValidator));
+			} else if (rule instanceof IBinaryParseRule) {
 				builder.addParseRule(new CKYBinaryParsingRule<MR>(
 						(IBinaryParseRule<MR>) rule, nfValidator));
 			} else if (rule instanceof IUnaryParseRule) {

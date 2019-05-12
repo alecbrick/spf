@@ -16,13 +16,8 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Term;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import com.sun.jndi.toolkit.ctx.Continuation;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
  * Wraps an expression with needed Lambda operators. The order of arguments is
@@ -119,6 +114,16 @@ public class LambdaWrapped implements ILogicalExpressionVisitor {
 		} else {
 			tempReturn = logicalConstant;
 		}
+	}
+
+	@Override
+	public void visit(ContinuationTower continuationTower) {
+		continuationTower.getTop().accept(this);
+		Lambda newTop = (Lambda) tempReturn;
+		continuationTower.getBottom().accept(this);
+		LogicalExpression newBottom = tempReturn;
+		// don't wrap continuation tower
+		tempReturn = new ContinuationTower(newTop, newBottom);
 	}
 
 	@Override

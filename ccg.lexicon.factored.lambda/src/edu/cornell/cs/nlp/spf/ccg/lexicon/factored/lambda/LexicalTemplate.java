@@ -30,6 +30,7 @@ import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.SyntaxAttributeTyping;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax.SimpleSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.ccg.lexicon.LexicalEntry;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
@@ -264,6 +265,22 @@ public class LexicalTemplate implements Serializable {
 				}
 			} else {
 				return syntax;
+			}
+		} else if (syntax instanceof TowerSyntax) {
+			final TowerSyntax tower = (TowerSyntax) syntax;
+			final Syntax base = replacePlaceholders(tower.getBase(), attributes);
+			final Syntax left = replacePlaceholders(tower.getLeft(), attributes);
+			final Syntax right = replacePlaceholders(tower.getRight(), attributes);
+
+			if (base == null || left == null || right == null) {
+				return null;
+			} else if (
+					base == tower.getBase() &&
+					left == tower.getLeft() &&
+					right == tower.getRight()) {
+				return tower;
+			} else {
+				return new TowerSyntax(base, left, right);
 			}
 		} else {
 			throw new RuntimeException("Unknown type of syntax");

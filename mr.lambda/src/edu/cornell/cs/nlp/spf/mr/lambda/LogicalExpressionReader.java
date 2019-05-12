@@ -54,6 +54,7 @@ public class LogicalExpressionReader {
 		register(new Variable.Reader());
 		register(new LogicalConstant.Reader());
 		register(new SkolemId.Reader());
+		register(new ContinuationTower.Reader());
 	}
 
 	/**

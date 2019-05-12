@@ -35,7 +35,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
  * @author Yoav Artzi
  */
 public class Splitter implements IUnificationSplitter {
-	private final ICategoryServices<LogicalExpression>	categoryServices;
+	protected final ICategoryServices<LogicalExpression>	categoryServices;
 	
 	public Splitter(ICategoryServices<LogicalExpression> categoryServices) {
 		this.categoryServices = categoryServices;

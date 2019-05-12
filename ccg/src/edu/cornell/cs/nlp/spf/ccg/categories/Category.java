@@ -21,6 +21,7 @@ import java.io.Serializable;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax.SimpleSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 
 /**
  * A CCG Category has both a syntactic and semantic component. Each instance of
@@ -51,6 +52,8 @@ public abstract class Category<MR> implements Serializable {
 			return new SimpleCategory<MR>((SimpleSyntax) syntax, semantics);
 		} else if (syntax instanceof ComplexSyntax) {
 			return new ComplexCategory<MR>((ComplexSyntax) syntax, semantics);
+		} else if (syntax instanceof TowerSyntax) {
+			return new TowerCategory<MR>((TowerSyntax) syntax, semantics);
 		} else {
 			throw new IllegalStateException("unsupported syntax type: "
 					+ syntax.getClass());

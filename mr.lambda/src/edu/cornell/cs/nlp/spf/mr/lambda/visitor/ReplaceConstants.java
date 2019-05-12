@@ -18,11 +18,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
 import java.util.Map;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
  * Given a mapping from {@link LogicalConstant} to {@link LogicalExpression},
@@ -93,6 +89,21 @@ public class ReplaceConstants implements ILogicalExpressionVisitor {
 		result = replacements.containsKey(logicalConstant) ? replacements
 				.get(logicalConstant) : logicalConstant;
 
+	}
+
+	@Override
+	public void visit(ContinuationTower tower) {
+		tower.getTop().accept(this);
+		LogicalExpression newTop = result;
+		tower.getBottom().accept(this);
+		LogicalExpression newBottom = result;
+
+		if (newTop != tower.getTop() ||
+				newBottom != tower.getBottom()) {
+			result = new ContinuationTower((Lambda) newTop, newBottom);
+		} else {
+			result = tower;
+		}
 	}
 
 	@Override

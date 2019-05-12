@@ -44,6 +44,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelImmutable;
 import edu.cornell.cs.nlp.spf.parser.ccg.model.IModelInit;
@@ -117,6 +118,12 @@ public class GeoExp extends DistributedExperiment {
 
 		this.categoryServices = new LogicalExpressionCategoryServices(true);
 		storeResource(CATEGORY_SERVICES_RESOURCE, categoryServices);
+
+		// //////////
+		// towerstuff
+		// //////////
+
+		storeResource(TOWER_CATEGORY_SERVICES_RESOURCE, new TowerCategoryServices(true));
 
 		// //////////////////////////////////////////////////
 		// Lexical factoring services

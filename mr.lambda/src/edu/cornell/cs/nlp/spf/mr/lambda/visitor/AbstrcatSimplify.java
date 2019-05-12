@@ -18,12 +18,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
 import java.util.Arrays;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.primitivetypes.IPredicateSimplifier;
 import edu.cornell.cs.nlp.spf.mr.language.type.RecursiveComplexType;
 
@@ -235,6 +230,15 @@ public abstract class AbstrcatSimplify implements ILogicalExpressionVisitor {
 	@Override
 	public void visit(LogicalConstant logicalConstant) {
 		result = logicalConstant;
+	}
+
+	@Override
+	public void visit(ContinuationTower tower) {
+		tower.getTop().accept(this);
+		final Lambda simplifiedTop = (Lambda) result;
+		tower.getBottom().accept(this);
+		final LogicalExpression simplifiedBottom = result;
+		result = new ContinuationTower(simplifiedTop, simplifiedBottom);
 	}
 
 	@Override

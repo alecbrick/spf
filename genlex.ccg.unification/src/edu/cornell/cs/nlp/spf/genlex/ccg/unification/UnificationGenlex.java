@@ -224,7 +224,10 @@ public class UnificationGenlex<SAMPLE extends Sentence, DI extends ILabeledDataI
 				.getCellFactory();
 
 		// Get all splits for the root category
+		long startTime = System.currentTimeMillis();
 		final Set<SplittingPair> allSplits = splitter.getSplits(rootCategory);
+		long endTime = System.currentTimeMillis();
+		float time = (endTime - startTime) / 1000;
 
 		// Iterate over all possible splits
 		for (final SplittingPair split : allSplits) {

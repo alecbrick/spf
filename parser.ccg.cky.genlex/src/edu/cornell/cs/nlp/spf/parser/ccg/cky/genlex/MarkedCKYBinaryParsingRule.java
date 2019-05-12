@@ -23,6 +23,9 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.ParseRuleResult;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * {@link CKYBinaryParsingRule} to test for the number of marked lexical entries
  * before applying the actual rule.
@@ -70,8 +73,8 @@ public class MarkedCKYBinaryParsingRule<MR> extends CKYBinaryParsingRule<MR> {
 	}
 
 	@Override
-	protected ParseRuleResult<MR> apply(Cell<MR> left, Cell<MR> right,
-			SentenceSpan span) {
+	protected List<ParseRuleResult<MR>> apply(Cell<MR> left, Cell<MR> right,
+											  SentenceSpan span) {
 		// If both cells contains a GENLEX lexical entry, don't apply the rule,
 		// just return
 		if (left instanceof IMarkedEntriesCounter
@@ -79,7 +82,7 @@ public class MarkedCKYBinaryParsingRule<MR> extends CKYBinaryParsingRule<MR> {
 				&& ((IMarkedEntriesCounter) left).getNumMarkedLexicalEntries()
 						+ ((IMarkedEntriesCounter) right)
 								.getNumMarkedLexicalEntries() > maxMarkedLexicalEntries) {
-			return null;
+			return Collections.EMPTY_LIST;
 		}
 
 		return super.apply(left, right, span);

@@ -527,32 +527,34 @@ public abstract class AbstractCKYParser<DI extends Sentence, MR>
 				for (int ruleIndex = 0; ruleIndex < numRules; ++ruleIndex) {
 					final CKYBinaryParsingRule<MR> rule = binaryRules[ruleIndex];
 					LOG.debug("Applying %s", rule);
-					final ParseRuleResult<MR> prr = rule.apply(left, right,
+					final List<ParseRuleResult<MR>> prrs = rule.apply(left, right,
 							span);
-					if (prr != null) {
-						counter.incrementAndGet();
-						// Filter cells, only keep cells that pass
-						// pruning over the semantics, if there's a
-						// pruning
-						// filter and
-						// they have semantics
-						if (!prune(pruningFilter,
-								new ParsingOp<MR>(prr.getResultCategory(), span,
-										rule.getName()),
-								true)) {
-							// Create the parse step
-							final CKYParseStep<MR> parseStep = new CKYParseStep<MR>(
-									prr.getResultCategory(), left, right,
-									isFullParse(span, prr.getResultCategory()),
-									prr.getRuleName(), start, end);
+					for (ParseRuleResult<MR> prr : prrs) {
+						if (prr != null) {
+							counter.incrementAndGet();
+							// Filter cells, only keep cells that pass
+							// pruning over the semantics, if there's a
+							// pruning
+							// filter and
+							// they have semantics
+							if (!prune(pruningFilter,
+									new ParsingOp<MR>(prr.getResultCategory(), span,
+											rule.getName()),
+									true)) {
+								// Create the parse step
+								final CKYParseStep<MR> parseStep = new CKYParseStep<MR>(
+										prr.getResultCategory(), left, right,
+										isFullParse(span, prr.getResultCategory()),
+										prr.getRuleName(), start, end);
 
-							// Create the chart cell
-							final Cell<MR> newCell = cellFactory.create(
-									new WeightedCKYParseStep<MR>(parseStep,
-											model));
-							LOG.debug("Created new cell: %s", newCell);
+								// Create the chart cell
+								final Cell<MR> newCell = cellFactory.create(
+										new WeightedCKYParseStep<MR>(parseStep,
+												model));
+								LOG.debug("Created new cell: %s", newCell);
 
-							newCellsFromLeft.add(newCell);
+								newCellsFromLeft.add(newCell);
+							}
 						}
 					}
 				}
@@ -642,83 +644,85 @@ public abstract class AbstractCKYParser<DI extends Sentence, MR>
 				for (int ruleIndex = 0; ruleIndex < numRules; ++ruleIndex) {
 					final CKYBinaryParsingRule<MR> rule = binaryRules[ruleIndex];
 					LOG.debug("Applying %s", rule);
-					final ParseRuleResult<MR> prr = rule.apply(left, right,
+					final List<ParseRuleResult<MR>> prrs = rule.apply(left, right,
 							span);
-					if (prr != null) {
-						counter.incrementAndGet();
-						// Prune, only keep categories that pass
-						// pruning over
-						// the semantics, if there's a pruning
-						// filter and they
-						// have semantics.
-						if (!prune(pruningFilter,
-								new ParsingOp<MR>(prr.getResultCategory(), span,
-										rule.getName()),
-								true)) {
-							// Create a CKY parse step from the
-							// result.
-							final CKYParseStep<MR> parseStep = new CKYParseStep<MR>(
-									prr.getResultCategory(), left, right,
-									isFullParse(span, prr.getResultCategory()),
-									prr.getRuleName(), start, end);
+					for (ParseRuleResult<MR> prr : prrs) {
+						if (prr != null) {
+							counter.incrementAndGet();
+							// Prune, only keep categories that pass
+							// pruning over
+							// the semantics, if there's a pruning
+							// filter and they
+							// have semantics.
+							if (!prune(pruningFilter,
+									new ParsingOp<MR>(prr.getResultCategory(), span,
+											rule.getName()),
+									true)) {
+								// Create a CKY parse step from the
+								// result.
+								final CKYParseStep<MR> parseStep = new CKYParseStep<MR>(
+										prr.getResultCategory(), left, right,
+										isFullParse(span, prr.getResultCategory()),
+										prr.getRuleName(), start, end);
 
-							// Create the cell.
-							final Cell<MR> newCell = cellFactory.create(
-									new WeightedCKYParseStep<MR>(parseStep,
-											model));
-							LOG.debug("Created new cell: %s", newCell);
-							synchronized (queue) {
+								// Create the cell.
+								final Cell<MR> newCell = cellFactory.create(
+										new WeightedCKYParseStep<MR>(parseStep,
+												model));
+								LOG.debug("Created new cell: %s", newCell);
+								synchronized (queue) {
 
-								if (queue.contains(newCell)) {
-									// Case the cell signature
-									// is already contained
-									// in the queue. Remove the
-									// old cell, add the
-									// new one to it, which
-									// might change its score,
-									// and then re-add to the
-									// queue.
+									if (queue.contains(newCell)) {
+										// Case the cell signature
+										// is already contained
+										// in the queue. Remove the
+										// old cell, add the
+										// new one to it, which
+										// might change its score,
+										// and then re-add to the
+										// queue.
 
-									final Cell<MR> oldCell = queue.get(newCell);
-									LOG.debug(
-											"Adding new cell to existing one in pre-chart queue: %s",
-											oldCell);
-									// Add the new cell to the
-									// old one.
-									if (oldCell.addCell(newCell)) {
-										// Max-children changed,
-										// score might have
-										// changed, so need to
-										// remove and re-queue.
+										final Cell<MR> oldCell = queue.get(newCell);
 										LOG.debug(
-												"Cell viterbi score updated: %s",
+												"Adding new cell to existing one in pre-chart queue: %s",
 												oldCell);
+										// Add the new cell to the
+										// old one.
+										if (oldCell.addCell(newCell)) {
+											// Max-children changed,
+											// score might have
+											// changed, so need to
+											// remove and re-queue.
+											LOG.debug(
+													"Cell viterbi score updated: %s",
+													oldCell);
 
-										// Remove the old cell,
-										// to re-add it.
-										queue.remove(oldCell);
-										// Adding here, not
-										// offering, since we
-										// just
-										// removed it, it should
-										// be added without
-										// any fear of
-										// exception.
-										queue.add(oldCell);
-									}
-								} else {
-									// Case new cell signature.
-									LOG.debug(
-											"Adding new cell to pre-chart queue.");
-									if (!queue.offer(newCell)) {
+											// Remove the old cell,
+											// to re-add it.
+											queue.remove(oldCell);
+											// Adding here, not
+											// offering, since we
+											// just
+											// removed it, it should
+											// be added without
+											// any fear of
+											// exception.
+											queue.add(oldCell);
+										}
+									} else {
+										// Case new cell signature.
 										LOG.debug(
-												"Pruned (pre-chart pruning): %s",
-												newCell);
-										pruned.getAndSet(true);
+												"Adding new cell to pre-chart queue.");
+										if (!queue.offer(newCell)) {
+											LOG.debug(
+													"Pruned (pre-chart pruning): %s",
+													newCell);
+											pruned.getAndSet(true);
+										}
 									}
+									LOG.debug("Pre-chart queue size = %d",
+											queue.size());
 								}
-								LOG.debug("Pre-chart queue size = %d",
-										queue.size());
 							}
 						}
 					}

@@ -24,6 +24,9 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.ParseRuleResult;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.RuleName.Direction;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * This is used to skip words tagged with an empty category:
  * <p>
@@ -88,8 +91,8 @@ public class BackwardSkippingRule<MR> extends CKYBinaryParsingRule<MR> {
 	}
 
 	@Override
-	protected ParseRuleResult<MR> apply(Cell<MR> left, Cell<MR> right,
-			SentenceSpan span) {
+	protected List<ParseRuleResult<MR>> apply(Cell<MR> left, Cell<MR> right,
+											  SentenceSpan span) {
 		// Apply backward skipping only when the left span starts at 0, and, if
 		// using aggressive generation of skipping entries, require that the
 		// right cell's category is not empty.
@@ -97,7 +100,7 @@ public class BackwardSkippingRule<MR> extends CKYBinaryParsingRule<MR> {
 				&& (!aggressive || !right.getCategory().equals(emptyCategory))) {
 			return super.apply(left, right, span);
 		} else {
-			return null;
+			return Collections.EMPTY_LIST;
 		}
 	}
 }

@@ -59,6 +59,12 @@ public class TypeRepository {
 	private final Map<ComplexTypeTriplet, ComplexType>	complexTypes			= new ConcurrentHashMap<ComplexTypeTriplet, ComplexType>();
 
 	/**
+	 * Stores all {@link TowerType}s, in addition to {@link #types}. This
+	 * allows for fast access without creating strings.
+	 */
+	private final Map<TowerTypeTuple, TowerType>		towerTypes				= new ConcurrentHashMap<TowerTypeTuple, TowerType>();
+
+	/**
 	 * Type for entities. Every type, except truth value type, index type and
 	 * functional type, extends entity.
 	 */
@@ -154,12 +160,16 @@ public class TypeRepository {
 				currentType = superType;
 			}
 			return currentType;
-		}
-		if (type.isArray()) {
+		} else if (type.isArray()) {
 			return getArrayTypeCreateIfNeeded(((ArrayType) type).getBaseType());
+		} else if (type instanceof TowerType) {
+			TowerType towerType = (TowerType) type;
+			return getTowerTypeCreateIfNeeded(
+					generalizeType(towerType.getTop()),
+					generalizeType(towerType.getBottom()));
 		} else {
-			throw new RuntimeException("Unhandled Type type: "
-					+ type.getClass().getCanonicalName());
+				throw new RuntimeException("Unhandled Type type: "
+						+ type.getClass().getCanonicalName());
 		}
 	}
 
@@ -221,6 +231,10 @@ public class TypeRepository {
 			} else if (label.endsWith(ArrayType.ARRAY_SUFFIX)) {
 				// Case array
 				return addType(createArrayTypeFromString(label));
+			} else if (label.startsWith(TowerType.TOWER_TYPE_OPEN_PAREN_STR)
+					&& label.endsWith(TowerType.TOWER_TYPE_CLOSE_PAREN_STR)) {
+				// Case tower
+				return addType(createTowerTypeFromString(label));
 			}
 		}
 		return existingType;
@@ -237,6 +251,17 @@ public class TypeRepository {
 		if (existingType == null) {
 			return (ComplexType) getTypeCreateIfNeeded(ComplexType
 					.composeString(range, domain, option));
+		} else {
+			return existingType;
+		}
+	}
+
+	public TowerType getTowerTypeCreateIfNeeded(Type top, Type bottom) {
+		final TowerType existingType = towerTypes
+				.get(new TowerTypeTuple(top, bottom));
+		if (existingType == null) {
+			return (TowerType) getTypeCreateIfNeeded(TowerType
+					.composeString(top, bottom));
 		} else {
 			return existingType;
 		}
@@ -263,7 +288,7 @@ public class TypeRepository {
 	 *         return the existing type object.
 	 */
 	private Type addType(Type type) {
-		if (lockPrimitives && !type.isArray() && !type.isComplex()) {
+		if (lockPrimitives && !type.isArray() && !type.isComplex() && !(type instanceof TowerType)) {
 			throw new RuntimeException("Primitive types adding is disabled: "
 					+ type);
 		}
@@ -287,6 +312,12 @@ public class TypeRepository {
 				createAndAddArrayAccessTypes((ArrayType) type);
 				arrayTypes.put(((ArrayType) type).getBaseType(),
 						(ArrayType) type);
+			}
+			if (type instanceof TowerType) {
+				TowerType towerType = (TowerType) type;
+				towerTypes.put(new TowerTypeTuple(towerType.getTop(),
+						towerType.getBottom()),
+						towerType);
 			}
 			return type;
 		}
@@ -335,7 +366,7 @@ public class TypeRepository {
 		final String domainString = domainStringBuilder.toString().trim();
 
 		// Check if the domain indicates to a RecursiveComplexType, and if so
-		// trim the indication to parse it and raise a flag
+		// trim the indication to parse it and lift a flag
 		final Pair<String, RecursiveComplexType.Option> prefixOption = RecursiveComplexType.Option
 				.parse(domainString);
 		final RecursiveComplexType.Option option = prefixOption.second();
@@ -366,6 +397,33 @@ public class TypeRepository {
 		}
 	}
 
+	private Type createTowerTypeFromString(String string) {
+        final String innerString = string.substring(1, string.length() - 1)
+				.trim();
+		int i = 0;
+		final StringBuilder topStringBuilder = new StringBuilder();
+		char c;
+		int parenthesisCounter = 0;
+		while (i < innerString.length()
+				&& !((c = innerString.charAt(i)) == TowerType.TOWER_TYPE_CLOSE_PAREN && parenthesisCounter == 0)) {
+			++i;
+			topStringBuilder.append(c);
+			if (c == TowerType.TOWER_TYPE_OPEN_PAREN) {
+				++parenthesisCounter;
+			} else if (c == TowerType.TOWER_TYPE_CLOSE_PAREN) {
+				--parenthesisCounter;
+			}
+		}
+		i += 2;
+		final String bottomString = innerString.substring(i).trim();
+		final String topString = topStringBuilder.toString().trim();
+
+        final Type top = getTypeCreateIfNeeded(topString);
+		final Type bottom = getTypeCreateIfNeeded(bottomString);
+
+		return new TowerType(string, top, bottom);
+	}
+
 	private Type createTypeFromString(String string) {
 		if (string.endsWith(ArrayType.ARRAY_SUFFIX)) {
 			// Array type
@@ -377,6 +435,9 @@ public class TypeRepository {
 				&& string.endsWith(ComplexType.COMPLEX_TYPE_CLOSE_PAREN_STR)) {
 			// Complex type
 			return createComplexTypeFromString(string);
+		} else if (string.startsWith(TowerType.TOWER_TYPE_OPEN_PAREN_STR)
+				&& string.endsWith(TowerType.TOWER_TYPE_CLOSE_PAREN_STR)) {
+			return createTowerTypeFromString(string);
 		} else {
 			// Case a simple primitive type, with no declared parent, so its
 			// parent is the entity type
@@ -428,6 +489,51 @@ public class TypeRepository {
 				return false;
 			}
 			if (!range.equals(other.range)) {
+				return false;
+			}
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
+
+	}
+
+    private static class TowerTypeTuple {
+		private final Type		top;
+		private final int		hashCode;
+		private final Type		bottom;
+
+		private TowerTypeTuple(Type top, Type bottom) {
+			this.top = top;
+			this.bottom = bottom;
+
+			// Calculate hash code.
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (top == null ? 0 : top.hashCode());
+			result = prime * result + (bottom == null ? 0 : bottom.hashCode());
+			this.hashCode = result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final TowerTypeTuple other = (TowerTypeTuple) obj;
+			if (!top.equals(other.top)) {
+				return false;
+			}
+			if (!bottom.equals(other.bottom)) {
 				return false;
 			}
 			return true;

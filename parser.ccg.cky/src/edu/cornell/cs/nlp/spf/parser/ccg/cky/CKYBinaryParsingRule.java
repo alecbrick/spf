@@ -17,6 +17,9 @@
 package edu.cornell.cs.nlp.spf.parser.ccg.cky;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import edu.cornell.cs.nlp.spf.parser.ccg.cky.chart.Cell;
 import edu.cornell.cs.nlp.spf.parser.ccg.normalform.NormalFormValidator;
@@ -94,13 +97,15 @@ public class CKYBinaryParsingRule<MR> implements Serializable {
 	 * Takes two cell, left and right, as input. Assumes these cells are
 	 * adjacent.
 	 */
-	protected ParseRuleResult<MR> apply(Cell<MR> left, Cell<MR> right,
-			SentenceSpan span) {
+	protected List<ParseRuleResult<MR>> apply(Cell<MR> left, Cell<MR> right,
+											  SentenceSpan span) {
 		assert left.getEnd() + 1 == right.getStart();
 		if (nfValidator != null
 				&& !nfValidator.isValid(left, right, rule.getName())) {
-			return null;
+			return Collections.EMPTY_LIST;
 		}
-		return rule.apply(left.getCategory(), right.getCategory(), span);
+		List<ParseRuleResult<MR>> ret = new ArrayList<ParseRuleResult<MR>>();
+		ret.add(rule.apply(left.getCategory(), right.getCategory(), span));
+		return ret;
 	}
 }

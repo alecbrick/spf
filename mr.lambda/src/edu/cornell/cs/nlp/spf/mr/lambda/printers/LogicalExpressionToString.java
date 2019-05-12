@@ -21,13 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.SkolemId;
-import edu.cornell.cs.nlp.spf.mr.lambda.Term;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
 import edu.cornell.cs.nlp.utils.collections.stackmap.HashStackMap;
@@ -81,6 +75,15 @@ public class LogicalExpressionToString implements ILogicalExpressionVisitor {
 			literal.getArg(i).accept(this);
 		}
 		outputString.append(')');
+	}
+
+	@Override
+	public void visit(ContinuationTower continuationTower) {
+		outputString.append('[');
+		continuationTower.getTop().accept(this);
+		outputString.append("][");
+		continuationTower.getBottom().accept(this);
+		outputString.append(']');
 	}
 
 	@Override
