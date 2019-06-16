@@ -20,13 +20,13 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
     }
 
     public Lambda getTopSemantics(TowerCategory<LogicalExpression> tower) {
-        ContinuationTower semantics = (ContinuationTower) tower.getSemantics();
+        Tower semantics = (Tower) tower.getSemantics();
         return semantics.getTop();
     }
 
     @Override
     public LogicalExpression getBottomSemantics(TowerCategory<LogicalExpression> tower) {
-        ContinuationTower semantics = (ContinuationTower) tower.getSemantics();
+        Tower semantics = (Tower) tower.getSemantics();
         return semantics.getBottom();
     }
 
@@ -40,14 +40,14 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
                 rightTower.getSyntax().getRight()
         );
 
-        ContinuationTower leftSemantics = (ContinuationTower) leftTower.getSemantics();
-        ContinuationTower rightSemantics = (ContinuationTower) rightTower.getSemantics();
+        Tower leftSemantics = (Tower) leftTower.getSemantics();
+        Tower rightSemantics = (Tower) rightTower.getSemantics();
         Lambda newTop =
                 (Lambda) categoryServices.compose(leftSemantics.getTop(),
                         rightSemantics.getTop(), 1);
 
-        ContinuationTower newSemantics =
-                new ContinuationTower(newTop, newBase.getSemantics());
+        Tower newSemantics =
+                new Tower(newTop, newBase.getSemantics());
         return new TowerCategory<LogicalExpression>(
                 newSyntax, newSemantics
         );
@@ -63,12 +63,12 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
             TowerCategory<LogicalExpression> toReplace,
             Category<LogicalExpression> base) {
         TowerSyntax oldSyntax = toReplace.getSyntax();
-        ContinuationTower oldSemantics =
-                (ContinuationTower) toReplace.getSemantics();
+        Tower oldSemantics =
+                (Tower) toReplace.getSemantics();
         TowerSyntax newTowerSyntax = new TowerSyntax(
                 base.getSyntax(), oldSyntax.getLeft(),
                 oldSyntax.getRight());
-        ContinuationTower newTowerSemantics = new ContinuationTower(
+        Tower newTowerSemantics = new Tower(
                 oldSemantics.getTop(),
                 base.getSemantics()
         );
@@ -81,8 +81,8 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
             return false;
         }
 
-        ContinuationTower leftSemantics = (ContinuationTower) leftTower.getSemantics();
-        ContinuationTower rightSemantics = (ContinuationTower) rightTower.getSemantics();
+        Tower leftSemantics = (Tower) leftTower.getSemantics();
+        Tower rightSemantics = (Tower) rightTower.getSemantics();
 
         if (categoryServices.compose(
                 leftSemantics.getTop(),
@@ -110,9 +110,9 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
                                 .generalizeType(semType)));
         final Lambda topSem = new Lambda(variable, variable);
         // TODO: Not sure if we should wrap this.
-        final ContinuationTower newSemantics =
-                (ContinuationTower) LambdaWrapped.of(
-                        new ContinuationTower(topSem, sem));
+        final Tower newSemantics =
+                (Tower) LambdaWrapped.of(
+                        new Tower(topSem, sem));
         return new TowerCategory<>(newSyntax, newSemantics);
     }
 
@@ -120,8 +120,8 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
     public Category<LogicalExpression> lower(
             TowerCategory<LogicalExpression> toLower) {
         TowerSyntax towerSyntax = toLower.getSyntax();
-        ContinuationTower towerSemantics =
-                    (ContinuationTower) toLower.getSemantics();
+        Tower towerSemantics =
+                    (Tower) toLower.getSemantics();
         // We can lower when right and base are S
         if (towerSyntax.getBase().equals(Syntax.S)) {
             if (towerSyntax.getRight().equals(Syntax.S)) {
@@ -159,8 +159,8 @@ public class TowerCategoryServices extends AbstractTowerCategoryServices<Logical
         // Some monadic stuff. Might need it later.
         /*
         TowerSyntax towerSyntax = toLower.getSyntax();
-        ContinuationTower towerSemantics =
-                (ContinuationTower) toLower.getSemantics();
+        Tower towerSemantics =
+                (Tower) toLower.getSemantics();
         if (towerSyntax.getBase().equals(Syntax.S) &&
                 towerSyntax.getRight().equals(Syntax.S)) {
             // Case 1

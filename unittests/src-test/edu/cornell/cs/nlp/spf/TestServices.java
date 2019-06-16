@@ -27,6 +27,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.BinaryRuleSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IRecursiveBinaryParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.BackwardApplication;
@@ -45,7 +46,7 @@ public class TestServices {
 	public static final List<File>							DEFAULT_ONTOLOGY_FILES;
 	public static final File								DEFAULT_TYPES_FILE;
 
-	public static final List<IBinaryParseRule<LogicalExpression>> BASE_RULES;
+	public static final BinaryRuleSet<LogicalExpression> BASE_RULES;
 	public static final List<IRecursiveBinaryParseRule<LogicalExpression>> RECURSIVE_RULES;
 
 	private TestServices() {
@@ -92,11 +93,13 @@ public class TestServices {
 		CATEGORY_SERVICES = new LogicalExpressionCategoryServices(true);
 		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true);
 
-		BASE_RULES = new ArrayList<>();
-		BASE_RULES.add(new ForwardApplication<>(CATEGORY_SERVICES));
-		BASE_RULES.add(new BackwardApplication<>(CATEGORY_SERVICES));
-		BASE_RULES.add(new ForwardComposition<>(CATEGORY_SERVICES, 1, false));
-		BASE_RULES.add(new BackwardComposition<>(CATEGORY_SERVICES, 1, false));
+		List<IBinaryParseRule> baseRules = new ArrayList<>();
+		baseRules.add(new ForwardApplication<>(CATEGORY_SERVICES));
+		baseRules.add(new BackwardApplication<>(CATEGORY_SERVICES));
+		baseRules.add(new ForwardComposition<>(CATEGORY_SERVICES, 1, false));
+		baseRules.add(new BackwardComposition<>(CATEGORY_SERVICES, 1, false));
+
+		BASE_RULES = new BinaryRuleSet(baseRules);
 
 		RECURSIVE_RULES = new ArrayList<>();
 		RECURSIVE_RULES.add(new Combination<>("C", TOWER_CATEGORY_SERVICES, BASE_RULES));
@@ -116,7 +119,7 @@ public class TestServices {
 	    return TOWER_CATEGORY_SERVICES;
 	}
 
-	public static List<IBinaryParseRule<LogicalExpression>> getBaseRules() {
+	public static BinaryRuleSet<LogicalExpression> getBaseRules() {
 		return BASE_RULES;
 	}
 

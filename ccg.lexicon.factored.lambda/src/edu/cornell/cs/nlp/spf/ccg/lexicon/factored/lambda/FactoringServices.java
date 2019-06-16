@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Function;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
-import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax.SimpleSyntax;
@@ -472,7 +471,7 @@ public class FactoringServices {
 
 		@Override
         // Similar logic to Literals.
-		public void visit(ContinuationTower tower) {
+		public void visit(Tower tower) {
 		    List<Pair<Placeholders, ? extends LogicalExpression>> tempList =
 					new ArrayList<>();
 			tower.getTop().accept(this);
@@ -496,7 +495,7 @@ public class FactoringServices {
 						bottomPair.second() != tower.getBottom()) {
 					tempReturn.add(Pair.of(
 							placeholder,
-							new ContinuationTower(
+							new Tower(
 									(Lambda) topPair.second(),
 									bottomPair.second()
 							)
@@ -517,7 +516,7 @@ public class FactoringServices {
 								tempReturn.add(
 										Pair.of(
 												placeholder,
-												new ContinuationTower(
+												new Tower(
 														(Lambda) topPair.second(),
 														bottomPair.second()
 												)

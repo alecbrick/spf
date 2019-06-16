@@ -16,22 +16,17 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.mr.lambda;
 
-import edu.cornell.cs.nlp.spf.base.LispReader;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpressionReader.IReader;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
-import edu.cornell.cs.nlp.spf.mr.language.type.ComplexType;
 import edu.cornell.cs.nlp.spf.mr.language.type.TowerType;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
-import edu.cornell.cs.nlp.utils.composites.Pair;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
-import it.unimi.dsi.fastutil.objects.ReferenceSets;
 
-import java.io.StringReader;
 import java.util.Set;
 
 /**
@@ -40,7 +35,7 @@ import java.util.Set;
  *
  * @author Yoav Artzi
  */
-public class ContinuationTower extends LogicalExpression
+public class Tower extends LogicalExpression
 		implements ITowerSemantics<LogicalExpression> {
 	/**
 	 * The head string for a lambda expression.
@@ -48,7 +43,7 @@ public class ContinuationTower extends LogicalExpression
 	public static final String		HEAD_STRING			= "lambda";
 
 	public static final ILogger		LOG					= LoggerFactory
-																.create(ContinuationTower.class);
+																.create(Tower.class);
 
 	public static final char		OPEN_PAREN		 	= '[';
 	public static final char		CLOSE_PAREN		 	= ']';
@@ -62,13 +57,13 @@ public class ContinuationTower extends LogicalExpression
 
 	private final TowerType type;
 
-	public ContinuationTower(Lambda top, LogicalExpression bottom) {
+	public Tower(Lambda top, LogicalExpression bottom) {
 		this(top, bottom, LogicLanguageServices.getTypeRepository());
 	}
 
 	@SuppressWarnings("unchecked")
-	private ContinuationTower(Lambda top, LogicalExpression bottom,
-                         TypeRepository typeRepository) {
+	private Tower(Lambda top, LogicalExpression bottom,
+				  TypeRepository typeRepository) {
 		assert top != null;
 		assert bottom != null;
 		this.top = top;
@@ -175,7 +170,7 @@ public class ContinuationTower extends LogicalExpression
 		if (getClass() != exp.getClass()) {
 			return false;
 		}
-		final ContinuationTower other = (ContinuationTower) exp;
+		final Tower other = (Tower) exp;
 		if (!type.equals(other.type)) {
 			return false;
 		}
@@ -186,13 +181,13 @@ public class ContinuationTower extends LogicalExpression
 		return ret;
 	}
 
-	public static class Reader implements IReader<ContinuationTower> {
+	public static class Reader implements IReader<Tower> {
 
 		@Override
-		public ContinuationTower read(String string,
-                                 ScopeMapping<String, LogicalExpression> mapping,
-                                 TypeRepository typeRepository, ITypeComparator typeComparator,
-                                 LogicalExpressionReader reader) {
+		public Tower read(String string,
+						  ScopeMapping<String, LogicalExpression> mapping,
+						  TypeRepository typeRepository, ITypeComparator typeComparator,
+						  LogicalExpressionReader reader) {
 
 			try {
                 final String innerString = string.substring(1, string.length() - 1)
@@ -225,7 +220,7 @@ public class ContinuationTower extends LogicalExpression
                 final LogicalExpression bottom = reader.read(
                 		bottomString, mapping, typeRepository, typeComparator);
 
-				return new ContinuationTower(top, bottom);
+				return new Tower(top, bottom);
 			} catch (final RuntimeException e) {
 				LOG.error("Continuation tower syntax error: %s", string);
 				throw e;

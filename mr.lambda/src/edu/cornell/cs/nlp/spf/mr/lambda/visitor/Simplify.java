@@ -24,7 +24,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
  * 
  * @author Yoav Artzi
  */
-public class Simplify extends AbstrcatSimplify {
+public class Simplify extends AbstractSimplify {
 	
 	private Simplify(boolean stripLambdas) {
 		super(stripLambdas);

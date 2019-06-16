@@ -28,7 +28,7 @@ import edu.cornell.cs.nlp.spf.mr.language.type.RecursiveComplexType;
  *
  * @author Yoav Artzi
  */
-public abstract class AbstrcatSimplify implements ILogicalExpressionVisitor {
+public abstract class AbstractSimplify implements ILogicalExpressionVisitor {
 
 	private final boolean		stripLambda;
 	/**
@@ -37,7 +37,7 @@ public abstract class AbstrcatSimplify implements ILogicalExpressionVisitor {
 	 */
 	protected LogicalExpression	result	= null;
 
-	protected AbstrcatSimplify(boolean stripLambdas) {
+	protected AbstractSimplify(boolean stripLambdas) {
 		this.stripLambda = stripLambdas;
 	}
 
@@ -233,12 +233,12 @@ public abstract class AbstrcatSimplify implements ILogicalExpressionVisitor {
 	}
 
 	@Override
-	public void visit(ContinuationTower tower) {
+	public void visit(Tower tower) {
 		tower.getTop().accept(this);
 		final Lambda simplifiedTop = (Lambda) result;
 		tower.getBottom().accept(this);
 		final LogicalExpression simplifiedBottom = result;
-		result = new ContinuationTower(simplifiedTop, simplifiedBottom);
+		result = new Tower(simplifiedTop, simplifiedBottom);
 	}
 
 	@Override
@@ -246,4 +246,27 @@ public abstract class AbstrcatSimplify implements ILogicalExpressionVisitor {
 		logicalExpression.accept(this);
 	}
 
+	@Override
+	public void visit(StateMonad stateM) {
+	    // TODO: might be different this is just temp!
+		stateM.getBody().accept(this);
+		result = new StateMonad(result, stateM.getState());
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		// TODO: is this where we want exec?
+		binding.getLeft().accept(this);
+		final LogicalExpression newLeft = result;
+
+		binding.getRight().accept(this);
+		final LogicalExpression newRight = result;
+
+		if (newLeft.equals(binding.getLeft()) &&
+			newRight.equals(binding.getRight())) {
+			result = binding;
+		} else {
+			result = new Binding(newLeft, newRight, binding.getVariable());
+		}
+	}
 }

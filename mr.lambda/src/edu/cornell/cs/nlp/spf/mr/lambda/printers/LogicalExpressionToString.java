@@ -78,11 +78,11 @@ public class LogicalExpressionToString implements ILogicalExpressionVisitor {
 	}
 
 	@Override
-	public void visit(ContinuationTower continuationTower) {
+	public void visit(Tower tower) {
 		outputString.append('[');
-		continuationTower.getTop().accept(this);
+		tower.getTop().accept(this);
 		outputString.append("][");
-		continuationTower.getBottom().accept(this);
+		tower.getBottom().accept(this);
 		outputString.append(']');
 	}
 
@@ -107,6 +107,36 @@ public class LogicalExpressionToString implements ILogicalExpressionVisitor {
 		} else {
 			processVariable(variable, false);
 		}
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		outputString.append(StateMonad.PREFIX);
+		outputString.append(' ');
+		stateM.getBody().accept(this);
+		outputString.append(" (");
+		boolean printSpace = false;
+		for (SkolemId s : stateM.getState().getState()) {
+			if (!printSpace) {
+				printSpace = true;
+			} else {
+				outputString.append(' ');
+			}
+			s.accept(this);
+		}
+		outputString.append("))");
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		outputString.append(Binding.PREFIX);
+		outputString.append(' ');
+		binding.getVariable().accept(this);
+		outputString.append(' ');
+		binding.getLeft().accept(this);
+		outputString.append(' ');
+		binding.getRight().accept(this);
+		outputString.append(Binding.PARENTHESIS_CLOSE);
 	}
 
 	private void processVariable(Variable variable, boolean lambdaArg) {

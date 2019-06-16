@@ -3,11 +3,10 @@ package edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive;
 import edu.cornell.cs.nlp.spf.TestServices;
 import edu.cornell.cs.nlp.spf.ccg.categories.ComplexCategory;
 import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
-import edu.cornell.cs.nlp.spf.mr.lambda.ContinuationTower;
+import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
 import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.ParseRuleResult;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lower.LowerRight;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class LowerRightTest {
 				.getCategoryServices()
 				.read("(N/N)//S\\\\S : [(lambda $0:<<e,t>,e> $0][(lambda $0:<e,t> (lambda $1:e (and:<t*,t> (loc:<lo,<lo,t>> $1 alaska:s) ($0 $1))))]");
 		Assert.assertTrue(primary.getSemantics() instanceof Lambda);
-		Assert.assertTrue(secondary.getSemantics() instanceof ContinuationTower);
+		Assert.assertTrue(secondary.getSemantics() instanceof Tower);
 
 		final LowerRight<LogicalExpression> rule = new LowerRight<>(
 				"v", TestServices.getTowerCategoryServices(), TestServices.getBaseRules());

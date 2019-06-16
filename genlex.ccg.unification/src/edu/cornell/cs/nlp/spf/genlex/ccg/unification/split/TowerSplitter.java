@@ -18,7 +18,6 @@ package edu.cornell.cs.nlp.spf.genlex.ccg.unification.split;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.*;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
-import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
@@ -27,11 +26,10 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment.Parameters;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices.SplittingPair;
-import edu.cornell.cs.nlp.spf.mr.lambda.ContinuationTower;
+import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
 import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.utils.composites.Pair;
-import sun.rmi.runtime.Log;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -81,7 +79,7 @@ public class TowerSplitter extends Splitter {
 		// Only add semantic splits, because we only care about those
 		for (Pair<Lambda, LogicalExpression> semPair : semPairs) {
 			TowerSyntax newTowerSyntax = new TowerSyntax(Syntax.S, cat.getSyntax(), Syntax.S);
-			ContinuationTower newTowerSemantics = new ContinuationTower(
+			Tower newTowerSemantics = new Tower(
 					semPair.first(),
 					semPair.second());
 			TowerCategory<LogicalExpression> newTower = new TowerCategory<>(newTowerSyntax, newTowerSemantics);

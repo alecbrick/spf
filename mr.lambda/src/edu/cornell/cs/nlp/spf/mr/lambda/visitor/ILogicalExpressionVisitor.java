@@ -28,9 +28,9 @@ public interface ILogicalExpressionVisitor extends
 
 	void visit(LogicalConstant logicalConstant);
 
-	default void visit(ContinuationTower continuationTower) {
-		continuationTower.getTop().accept(this);
-		continuationTower.getBottom().accept(this);
+	default void visit(Tower tower) {
+		tower.getTop().accept(this);
+		tower.getBottom().accept(this);
 	}
 
     default void visit(LogicalExpression logicalExpression) {
@@ -39,4 +39,12 @@ public interface ILogicalExpressionVisitor extends
 
 	void visit(Variable variable);
 
+	default void visit(StateMonad m) {
+		m.getBody().accept(this);
+	}
+
+	default void visit(Binding binding) {
+		binding.getLeft().accept(this);
+		binding.getRight().accept(this);
+	}
 }

@@ -64,6 +64,12 @@ public class TypeRepository {
 	 */
 	private final Map<TowerTypeTuple, TowerType>		towerTypes				= new ConcurrentHashMap<TowerTypeTuple, TowerType>();
 
+		/**
+	 * Stores all {@link MonadType}s, in addition to {@link #types}. This
+	 * allows for fast access without creating strings.
+	 */
+	private final Map<Type, MonadType>		monadTypes				= new ConcurrentHashMap<Type, MonadType>();
+
 	/**
 	 * Type for entities. Every type, except truth value type, index type and
 	 * functional type, extends entity.
@@ -167,6 +173,10 @@ public class TypeRepository {
 			return getTowerTypeCreateIfNeeded(
 					generalizeType(towerType.getTop()),
 					generalizeType(towerType.getBottom()));
+		} else if (type instanceof MonadType) {
+			MonadType monadType = (MonadType) type;
+			return getMonadTypeCreateIfNeeded(
+					generalizeType(monadType.getDomain()));
 		} else {
 				throw new RuntimeException("Unhandled Type type: "
 						+ type.getClass().getCanonicalName());
@@ -235,6 +245,9 @@ public class TypeRepository {
 					&& label.endsWith(TowerType.TOWER_TYPE_CLOSE_PAREN_STR)) {
 				// Case tower
 				return addType(createTowerTypeFromString(label));
+			} else if (label.startsWith(MonadType.MONAD_TYPE_OPEN_PAREN)
+					&& label.endsWith(MonadType.MONAD_TYPE_CLOSE_PAREN_STR)) {
+				return addType(createMonadTypeFromString(label));
 			}
 		}
 		return existingType;
@@ -267,6 +280,16 @@ public class TypeRepository {
 		}
 	}
 
+	public MonadType getMonadTypeCreateIfNeeded(Type body) {
+		final MonadType existingType = monadTypes.get(body);
+		if (existingType == null) {
+			return (MonadType) getTypeCreateIfNeeded(MonadType
+					.composeString(body));
+		} else {
+			return existingType;
+		}
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder ret = new StringBuilder();
@@ -288,7 +311,7 @@ public class TypeRepository {
 	 *         return the existing type object.
 	 */
 	private Type addType(Type type) {
-		if (lockPrimitives && !type.isArray() && !type.isComplex() && !(type instanceof TowerType)) {
+		if (lockPrimitives && !type.isArray() && !type.isComplex() && !(type instanceof TowerType) && !(type instanceof MonadType)) {
 			throw new RuntimeException("Primitive types adding is disabled: "
 					+ type);
 		}
@@ -424,6 +447,12 @@ public class TypeRepository {
 		return new TowerType(string, top, bottom);
 	}
 
+	private Type createMonadTypeFromString(String string) {
+		final String innerString = string.substring(2, string.length() - 1).trim();
+		final Type body = getTypeCreateIfNeeded(innerString);
+		return new MonadType(string, body);
+	}
+
 	private Type createTypeFromString(String string) {
 		if (string.endsWith(ArrayType.ARRAY_SUFFIX)) {
 			// Array type
@@ -534,6 +563,45 @@ public class TypeRepository {
 				return false;
 			}
 			if (!bottom.equals(other.bottom)) {
+				return false;
+			}
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
+
+	}
+
+    private static class MonadTypeTuple {
+		private final Type		body;
+		private final int		hashCode;
+
+		private MonadTypeTuple(Type body) {
+			this.body = body;
+
+			// Calculate hash code.
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (body == null ? 0 : body.hashCode());
+			this.hashCode = result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MonadTypeTuple other = (MonadTypeTuple) obj;
+			if (!body.equals(other.body)) {
 				return false;
 			}
 			return true;

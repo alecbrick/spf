@@ -16,7 +16,6 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
-import com.sun.jndi.toolkit.ctx.Continuation;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
@@ -117,13 +116,13 @@ public class LambdaWrapped implements ILogicalExpressionVisitor {
 	}
 
 	@Override
-	public void visit(ContinuationTower continuationTower) {
-		continuationTower.getTop().accept(this);
+	public void visit(Tower tower) {
+		tower.getTop().accept(this);
 		Lambda newTop = (Lambda) tempReturn;
-		continuationTower.getBottom().accept(this);
+		tower.getBottom().accept(this);
 		LogicalExpression newBottom = tempReturn;
 		// don't wrap continuation tower
-		tempReturn = new ContinuationTower(newTop, newBottom);
+		tempReturn = new Tower(newTop, newBottom);
 	}
 
 	@Override
@@ -138,5 +137,28 @@ public class LambdaWrapped implements ILogicalExpressionVisitor {
 		} else {
 			tempReturn = variable;
 		}
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		stateM.getBody().accept(this);
+		LogicalExpression newBody = tempReturn;
+		// TODO: do we need to update free variables?
+		tempReturn = new StateMonad(newBody, stateM.getState());
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		binding.getLeft().accept(this);
+		LogicalExpression newLeft = tempReturn;
+
+		binding.getRight().accept(this);
+		LogicalExpression newRight = tempReturn;
+		if (binding.getLeft().equals(newLeft) &&
+			binding.getRight().equals(newRight)) {
+			tempReturn = binding;
+		} else {
+		    tempReturn = new Binding(newLeft, newRight, binding.getVariable());
+        }
 	}
 }

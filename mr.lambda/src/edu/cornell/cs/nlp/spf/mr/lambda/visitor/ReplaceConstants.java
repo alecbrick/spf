@@ -92,7 +92,7 @@ public class ReplaceConstants implements ILogicalExpressionVisitor {
 	}
 
 	@Override
-	public void visit(ContinuationTower tower) {
+	public void visit(Tower tower) {
 		tower.getTop().accept(this);
 		LogicalExpression newTop = result;
 		tower.getBottom().accept(this);
@@ -100,7 +100,7 @@ public class ReplaceConstants implements ILogicalExpressionVisitor {
 
 		if (newTop != tower.getTop() ||
 				newBottom != tower.getBottom()) {
-			result = new ContinuationTower((Lambda) newTop, newBottom);
+			result = new Tower((Lambda) newTop, newBottom);
 		} else {
 			result = tower;
 		}

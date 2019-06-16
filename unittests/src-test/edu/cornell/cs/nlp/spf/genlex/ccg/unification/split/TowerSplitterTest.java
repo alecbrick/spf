@@ -21,7 +21,7 @@ public class TowerSplitterTest {
 
         TowerRule<LogicalExpression> towerRule = new TowerRule<>(
                 TestServices.getTowerCategoryServices(),
-                TestServices.getBaseRules()
+                TestServices.getRecursiveRules()
         );
         int i = 1;
         for (SplittingServices.SplittingPair pair : actual) {

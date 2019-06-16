@@ -50,11 +50,12 @@ public class LogicalExpressionReader {
 	static {
 		// Register readers for all the basic types.
 		register(new Lambda.Reader());
-		register(new Literal.Reader());
 		register(new Variable.Reader());
 		register(new LogicalConstant.Reader());
 		register(new SkolemId.Reader());
-		register(new ContinuationTower.Reader());
+		register(new Tower.Reader());
+		register(new Monad.Reader());
+		register(new Literal.Reader());
 	}
 
 	/**

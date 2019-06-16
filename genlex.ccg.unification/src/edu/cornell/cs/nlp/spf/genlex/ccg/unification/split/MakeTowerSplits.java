@@ -6,7 +6,7 @@ import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices.SplittingPair;
-import edu.cornell.cs.nlp.spf.mr.lambda.ContinuationTower;
+import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
 import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.utils.composites.Pair;
@@ -74,7 +74,7 @@ public class MakeTowerSplits {
         final Syntax towerLeftSyntax = towerSyntax.getLeft();
         final Syntax towerRightSyntax = towerSyntax.getRight();
 
-        final ContinuationTower towerSemantics = (ContinuationTower) towerCategory.getSemantics();
+        final Tower towerSemantics = (Tower) towerCategory.getSemantics();
         final Lambda towerTop = towerSemantics.getTop();
 
         final ComplexCategory<LogicalExpression> topCategory = (ComplexCategory<LogicalExpression>) Category.create(
@@ -122,11 +122,11 @@ public class MakeTowerSplits {
                 if (!(leftSem.getArgument().equals(leftSem.getBody()) ||
                         rightSem.getArgument().equals(rightSem.getBody()))) {
                     TowerSyntax leftTowerSyn = new TowerSyntax(botLeft.getSyntax(), leftRes, leftArg);
-                    ContinuationTower leftTowerSem = new ContinuationTower(leftSem, botLeft.getSemantics());
+                    Tower leftTowerSem = new Tower(leftSem, botLeft.getSemantics());
                     TowerCategory<LogicalExpression> leftTower = new TowerCategory<>(leftTowerSyn, leftTowerSem);
 
                     TowerSyntax rightTowerSyn = new TowerSyntax(botRight.getSyntax(), rightRes, rightArg);
-                    ContinuationTower rightTowerSem = new ContinuationTower(rightSem, botRight.getSemantics());
+                    Tower rightTowerSem = new Tower(rightSem, botRight.getSemantics());
                     TowerCategory<LogicalExpression> rightTower = new TowerCategory<>(rightTowerSyn, rightTowerSem);
 
                     ret.add(new SplittingPair(leftTower, rightTower));
@@ -134,13 +134,13 @@ public class MakeTowerSplits {
 
                 // Raise left
                 TowerSyntax bigRightTowerSyn = new TowerSyntax(botRight.getSyntax(), towerLeftSyntax, towerRightSyntax);
-                ContinuationTower bigRightTowerSem = new ContinuationTower(towerTop, botRight.getSemantics());
+                Tower bigRightTowerSem = new Tower(towerTop, botRight.getSemantics());
                 TowerCategory<LogicalExpression> bigRightTower = new TowerCategory<>(bigRightTowerSyn, bigRightTowerSem);
                 ret.add(new SplittingPair(botLeft, bigRightTower));
 
                 // Raise right
                 TowerSyntax bigLeftTowerSyn = new TowerSyntax(botLeft.getSyntax(), towerLeftSyntax, towerRightSyntax);
-                ContinuationTower bigLeftTowerSem = new ContinuationTower(towerTop, botLeft.getSemantics());
+                Tower bigLeftTowerSem = new Tower(towerTop, botLeft.getSemantics());
                 TowerCategory<LogicalExpression> bigLeftTower = new TowerCategory<>(bigLeftTowerSyn, bigLeftTowerSem);
                 ret.add(new SplittingPair(bigLeftTower, botRight));
             }

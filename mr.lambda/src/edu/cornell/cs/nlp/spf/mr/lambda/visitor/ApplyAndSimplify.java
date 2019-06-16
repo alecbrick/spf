@@ -31,7 +31,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
  *
  * @author Luke Zettlemoyer
  */
-public class ApplyAndSimplify extends AbstrcatSimplify {
+public class ApplyAndSimplify extends AbstractSimplify {
 
 	/**
 	 * The argument of the application operation, e.g. x in f(x).
@@ -59,7 +59,7 @@ public class ApplyAndSimplify extends AbstrcatSimplify {
 	public static LogicalExpression of(LogicalExpression func,
 			LogicalExpression arg) {
 		// Make sure the argument is safe. Meaning, the set of free variables in
-		// both function and argument doens't intersect. For that purpose,
+		// both function and argument doesn't intersect. For that purpose,
 		// replace all such objects in the argument.
 		final LogicalExpression safeArg = ReplaceFreeVariablesIfPresent.of(arg,
 				func.getFreeVariables());
