@@ -17,7 +17,7 @@ type=data.composite id=train sets=fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold
 type=data.composite id=test sets=fold0
 # Learner and tester
 include=../learn.inc
-# Initializars
+# Initializers
 include=../init.inc
 
 # Jobs

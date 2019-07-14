@@ -16,12 +16,7 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.genlex.ccg.unification.split;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import edu.cornell.cs.nlp.spf.base.collections.PowerSet;
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
@@ -31,12 +26,7 @@ import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices.SplittingPair;
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetAllFreeVariables;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ReplaceExpression;
@@ -128,7 +118,7 @@ public class MakeCompositionSplits implements ILogicalExpressionVisitor {
 		return split;
 	}
 
-	static Set<SplittingPair> of(Category<LogicalExpression> originalCategory,
+	public static Set<SplittingPair> of(Category<LogicalExpression> originalCategory,
 			ICategoryServices<LogicalExpression> categoryServices) {
 
 		// Check if can split
@@ -210,10 +200,25 @@ public class MakeCompositionSplits implements ILogicalExpressionVisitor {
 		// Nothing to do
 	}
 
+	@Override
+	public void visit(StateMonad stateM) {
+		stateM.getBody().accept(this);
+	}
+
+	@Override
+	public void visit(Binding binding) {
+	    binding.getLeft().accept(this);
+	    binding.getRight().accept(this);
+	    // dubious
+	    if (!(binding.getRight() instanceof Variable)) {
+	    	splits.add(doSplit(binding.getRight(), new ArrayList<>()));
+		}
+	}
+
 	private SplittingPair createSplittingPair(Lambda f, LogicalExpression g) {
 		// Simplify f and g
 		final LogicalExpression simplifiedF = Simplify.of(f);
-		final LogicalExpression simlifiedG = Simplify.of(g);
+		final LogicalExpression simplifiedG = Simplify.of(g);
 
 		// Create the categories for the composition
 		final Slash slash = originalCategory.getSlash();
@@ -225,7 +230,7 @@ public class MakeCompositionSplits implements ILogicalExpressionVisitor {
 						sharedCategory.getSyntax(), slash), simplifiedF);
 		final ComplexCategory<LogicalExpression> gCategory = new ComplexCategory<LogicalExpression>(
 				new ComplexSyntax(sharedCategory.getSyntax(), originalCategory
-						.getSyntax().getRight(), slash), simlifiedG);
+						.getSyntax().getRight(), slash), simplifiedG);
 
 		// Create the splitting pair. Don't allow crossing composition
 		final SplittingPair newSplit;

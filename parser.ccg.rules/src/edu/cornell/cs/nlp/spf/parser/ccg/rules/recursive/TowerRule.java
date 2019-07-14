@@ -20,11 +20,11 @@ import java.util.List;
  * this class enforces that order.
  */
 public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
+    private static final String         RULE_LABEL = "vRS";
 
-    private final ITowerCategoryServices<MR> towerCategoryServices;
+    protected final ITowerCategoryServices<MR> towerCategoryServices;
     private final List<IRecursiveBinaryParseRule<MR>> recursiveRules;
 
-    private final UnaryRuleName lowerResultName = UnaryRuleName.create("vRS");
     // TODO: maybe make this parameterizable?
     private final UnaryRuleName towerRuleName = UnaryRuleName.create("tower");
 
@@ -45,7 +45,9 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
     }
 
     @Override
-    public List<ParseRuleResult<MR>> applyRecursive(Category<MR> left, Category<MR> right, SentenceSpan span, List<IRecursiveBinaryParseRule<MR>> validRules) {
+    public List<ParseRuleResult<MR>> applyRecursive(
+            Category<MR> left, Category<MR> right, SentenceSpan span,
+            List<IRecursiveBinaryParseRule<MR>> validRules) {
         if (!(left instanceof TowerCategory || right instanceof TowerCategory)) {
             return Collections.emptyList();
         }
@@ -65,22 +67,14 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
                                 (TowerCategory<MR>) resultCategory);
                 if (loweredCategory != null) {
                     ret.add(new ParseRuleResult<>(
-                            createRuleName(result, lowerResultName),
+                            RecursiveRuleName.create(
+                                    RULE_LABEL, result.getRuleName()),
                             loweredCategory));
                 }
             }
         }
 
         return ret;
-    }
-
-    protected RuleName createRuleName(ParseRuleResult<MR> recursiveRule,
-                                      RuleName ruleName) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(ruleName);
-        builder.append(",");
-        builder.append(recursiveRule.getRuleName().toString());
-        return UnaryRuleName.create(builder.toString());
     }
 
     public static class Creator<MR> implements
@@ -118,7 +112,7 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
 
         @Override
         public ResourceUsage usage() {
-            return ResourceUsage.builder(type, Combination.class)
+            return ResourceUsage.builder(type, TowerRule.class)
                     .build();
         }
     }

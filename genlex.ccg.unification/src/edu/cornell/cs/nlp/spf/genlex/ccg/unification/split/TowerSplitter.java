@@ -18,6 +18,7 @@ package edu.cornell.cs.nlp.spf.genlex.ccg.unification.split;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.*;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
@@ -26,15 +27,13 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment.Parameters;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices.SplittingPair;
-import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
+import edu.cornell.cs.nlp.spf.mr.lambda.visitor.*;
+import edu.cornell.cs.nlp.spf.mr.language.type.MonadType;
 import edu.cornell.cs.nlp.utils.composites.Pair;
+import edu.cornell.cs.nlp.utils.log.Log;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Tower splitting service object.
@@ -53,12 +52,112 @@ public class TowerSplitter extends Splitter {
 	    this.towerCategoryServices = towerCategoryServices;
 	}
 
+	private List<TowerCategory<LogicalExpression>> towerMonadicUnlower(TowerCategory towerCategory) {
+		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
+		Tower tower = (Tower) towerCategory.getSemantics();
+		TowerSyntax towerSyntax = towerCategory.getSyntax();
+		Lambda top = tower.getTop();
+		ComplexSyntax topSyntax = new ComplexSyntax(towerSyntax.getLeft(), towerSyntax.getRight(), Slash.FORWARD);
+		Set<SplittingPair> pairs = MakeCompositionSplits.of(Category.create(topSyntax, top), categoryServices);
+		for (SplittingPair pair : pairs) {
+			Tower newTower = new Tower((Lambda) pair.right.getSemantics(), tower.getBottom());
+			TowerCategory<LogicalExpression> newTowerCategory = new TowerCategory<>(towerSyntax, newTower);
+			// note - not necessarily monadic
+			List<TowerCategory<LogicalExpression>> results = monadicUnlower(newTowerCategory);
+			for (TowerCategory<LogicalExpression> result : results) {
+				TowerSyntax resultSyntax = new TowerSyntax(result.getSyntax(), Syntax.S, Syntax.S);
+				Tower resultSemantics = new Tower((Lambda) pair.getLeft().getSemantics(), result.getSemantics());
+				ret.add(new TowerCategory<>(resultSyntax, resultSemantics));
+			}
+		}
+
+		return ret;
+	}
+
+	private TowerCategory<LogicalExpression> complexMonadicUnlower(ComplexCategory complexCategory,
+																		 StateMonad exp) {
+		TowerSyntax newSyntax = new TowerSyntax(complexCategory.getSyntax(), Syntax.S, Syntax.S);
+		Lambda lambda = (Lambda) complexCategory.getSemantics();
+		// TODO: Is this something we need?
+		/*
+        if (exp.getState().size() > 0) {
+            return null;
+        } */
+        if (!IsContainingVariable.of(exp, lambda.getArgument())) {
+            return null;
+        }
+        Variable newVar = new Variable(
+                LogicLanguageServices.getTypeRepository()
+                    .generalizeType(exp.getType()));
+        Lambda newTop = new Lambda(newVar, ReplaceExpression.of(
+        		lambda.getBody(), exp, newVar));
+
+        // new top should NOT have bottom lambda variable
+        if (IsContainingVariable.of(newTop, lambda.getArgument())) {
+            return null;
+        }
+        Lambda newBottom = new Lambda(lambda.getArgument(), exp.getBody());
+        Tower newTower = new Tower(newTop, newBottom);
+        return new TowerCategory<>(newSyntax, newTower);
+	}
+
+	private List<TowerCategory<LogicalExpression>> monadicUnlower(Category<LogicalExpression> cat) {
+		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
+		LogicalExpression sem = cat.getSemantics();
+	    if (cat instanceof TowerCategory) {
+	    	sem = towerCategoryServices.towerToLambda(sem);
+		}
+		for (LogicalExpression exp : AllSubExpressions.of(sem)) {
+			if (!(exp instanceof StateMonad)) {
+				continue;
+			}
+			StateMonad monadExp = (StateMonad) exp;
+			if (cat instanceof ComplexCategory) {
+				ComplexCategory complexCategory = (ComplexCategory) cat;
+				ComplexSyntax complexSyntax = complexCategory.getSyntax();
+				if (complexSyntax.getLeft().equals(Syntax.S)) {
+					// case 2
+					TowerCategory<LogicalExpression> result =
+							complexMonadicUnlower(complexCategory, monadExp);
+					if (result != null) {
+						ret.add(result);
+					}
+				}
+			}
+			// case 1, applicable if monad
+			TowerSyntax newSyntax = new TowerSyntax(Syntax.S, cat.getSyntax(), Syntax.S);
+			// TODO: Do we need this?
+			/*
+			if (monadExp.getState().size() > 0) {
+				return ret;
+			}
+			*/
+            Variable newVar = new Variable(
+                LogicLanguageServices.getTypeRepository()
+                    .generalizeType(exp.getType()));
+            Lambda newTop = new Lambda(newVar, ReplaceExpression.of(sem, exp, newVar));
+			ret.add(new TowerCategory<>(newSyntax, new Tower(newTop, monadExp.getBody())));
+		}
+	    return ret;
+	}
+
 	public List<TowerCategory<LogicalExpression>> unlower(Category<LogicalExpression> cat) {
-		Set<SplittingPair> baseSplits = MakeApplicationSplits.of(cat, categoryServices);
+	    // We need to use MakeApplicationSplits rather than just getting
+		// subexpressions since we need to split into ALL possible
+		// pairs such that left(right) = original.
+		LogicalExpression sem = cat.getSemantics();
+		if (cat instanceof TowerCategory) {
+			sem = towerCategoryServices.towerToLambda(sem);
+		}
+		Set<SplittingPair> baseSplits = MakeApplicationSplits.of(
+				Category.create(Syntax.S, sem), categoryServices);
 		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
 		// For each possible split, create a new tower
 		Set<Pair<Lambda, LogicalExpression>> semPairs = new HashSet<>();
 		for (SplittingPair split : baseSplits) {
+		    if (!split.getRight().getSyntax().equals(Syntax.S)) {
+		    	continue;
+			}
 			Category<LogicalExpression> top = split.getLeft();
 			// Must be a forward application
 			if (!(top instanceof ComplexCategory) ||
@@ -76,6 +175,7 @@ public class TowerSplitter extends Splitter {
 			}
 			semPairs.add(Pair.of((Lambda) split.left.getSemantics(), split.right.getSemantics()));
 		}
+		ret.addAll(monadicUnlower(cat));
 		// Only add semantic splits, because we only care about those
 		for (Pair<Lambda, LogicalExpression> semPair : semPairs) {
 			TowerSyntax newTowerSyntax = new TowerSyntax(Syntax.S, cat.getSyntax(), Syntax.S);
@@ -101,20 +201,24 @@ public class TowerSplitter extends Splitter {
 
 		// Reverse the Lower operation.
         List<TowerCategory<LogicalExpression>> newTowers = new ArrayList<>();
-        // TODO: Figure out how to lower into a tower category
-		// Unlower the base of a tower.
         if (category instanceof TowerCategory) {
-        	// Since we're unlowering a tower, we can have multiple original tower tops and bottoms
-        	TowerCategory<LogicalExpression> tower = (TowerCategory<LogicalExpression>) category;
-        	Category<LogicalExpression> base = towerCategoryServices.getBase(tower);
-        	for (TowerCategory<LogicalExpression> newBase : unlower(base)) {
-        		TowerCategory<LogicalExpression> newTower =
+			// Since we're unlowering a tower, we can have multiple original tower tops and bottoms
+			TowerCategory<LogicalExpression> tower = (TowerCategory<LogicalExpression>) category;
+			Category<LogicalExpression> base = towerCategoryServices.getBase(tower);
+			/* TODO: Probably isn't necessary. I think we want lowers to be "one fell swoop" lowers.
+			// Unlower the base of a tower.
+			/*
+			for (TowerCategory<LogicalExpression> newBase : unlower(base)) {
+				TowerCategory<LogicalExpression> newTower =
 						towerCategoryServices.replaceBase(tower, newBase);
-        		newTowers.add(newTower);
+				newTowers.add(newTower);
+			}*/
+			Tower towerSemantics = (Tower) tower.getSemantics();
+			if (towerSemantics.getTop().getType().getDomain() instanceof MonadType) {
+                newTowers.addAll(towerMonadicUnlower(tower));
 			}
-		} else {
-        	newTowers = unlower(category);
 		}
+        newTowers.addAll(unlower(category));
 
         for (TowerCategory<LogicalExpression> tower : newTowers) {
         	splits.addAll(getRecursiveSplits(tower));

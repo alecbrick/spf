@@ -44,6 +44,8 @@ public class LogicalExpressionReader {
 
 	private final List<IReader<? extends LogicalExpression>>	readers					= new ArrayList<IReader<? extends LogicalExpression>>();
 
+	private boolean lambdaWrapped = true;
+
 	private LogicalExpressionReader() {
 	}
 
@@ -77,6 +79,10 @@ public class LogicalExpressionReader {
 		LogicalExpressionReader.INSTANCE = reader;
 	}
 
+	public static void setLambdaWrapped(boolean lambdaWrapped) {
+		INSTANCE.lambdaWrapped = lambdaWrapped;
+	}
+
 	/**
 	 * Read a logical expression from a LISP formatted string.
 	 */
@@ -93,9 +99,14 @@ public class LogicalExpressionReader {
 		// space.
 		final String flatString = WHITE_SPACE_REPLACER.replace(string);
 		try {
-			return LambdaWrapped.of(read(flatString,
+		    LogicalExpression result = read(flatString,
 					new ScopeMapping<String, LogicalExpression>(),
-					typeRepository, typeComparator));
+					typeRepository, typeComparator);
+		    if (lambdaWrapped) {
+				return LambdaWrapped.of(result);
+			} else {
+		    	return result;
+			}
 		} catch (final RuntimeException e) {
 			LOG.error("Logical expression syntax error: %s", flatString);
 			throw e;

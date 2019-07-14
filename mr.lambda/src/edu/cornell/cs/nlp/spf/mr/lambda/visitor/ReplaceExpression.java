@@ -16,11 +16,7 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
  * Replaces all the occurrences of the given sub-expression with the replacement
@@ -166,6 +162,56 @@ public class ReplaceExpression implements ILogicalExpressionVisitor {
 			result = replacement;
 		} else {
 			result = variable;
+		}
+	}
+
+	@Override
+	public void visit(Tower tower) {
+	    if (subExp.equals(tower)) {
+	    	result = replacement;
+		} else {
+            tower.getTop().accept(this);
+            Lambda newTop = (Lambda) result;
+            tower.getBottom().accept(this);
+            LogicalExpression newBottom = result;
+            if (newTop.equals(tower.getTop()) &&
+                newBottom.equals(tower.getBottom())) {
+                result = tower;
+            } else {
+				result = new Tower(newTop, newBottom);
+			}
+		}
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		if (subExp.equals(stateM)) {
+			result = replacement;
+		} else {
+            stateM.getBody().accept(this);
+            if (result.equals(stateM.getBody())) {
+                result = stateM;
+            } else {
+                result = new StateMonad(result, stateM.getState());
+            }
+		}
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		if (subExp.equals(binding)) {
+			result = replacement;
+		} else {
+            binding.getLeft().accept(this);
+            LogicalExpression newLeft = result;
+            binding.getRight().accept(this);
+            LogicalExpression newRight = result;
+            if (newLeft.equals(binding.getLeft()) &&
+                newRight.equals(binding.getRight())) {
+                result = binding;
+            } else {
+                result = new Binding(newLeft, newRight, binding.getVariable());
+            }
 		}
 	}
 }

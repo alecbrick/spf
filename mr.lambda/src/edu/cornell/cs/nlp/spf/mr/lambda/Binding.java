@@ -22,6 +22,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpressionReader.IReader;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.LambdaWrapped;
+import edu.cornell.cs.nlp.spf.mr.language.type.MonadType;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import edu.cornell.cs.nlp.utils.composites.Pair;
@@ -31,15 +32,14 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSets;
 
 import java.io.StringReader;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Lambda calculus literal.
  *
  * @author Yoav Artzi
  */
-public class Binding<T extends Monad> extends Monad {
+public class Binding extends Monad {
 	public static final String			HEAD_STRING			= ">>=";
 	public static final ILogger			LOG					= LoggerFactory
 																	.create(Binding.class);
@@ -63,8 +63,8 @@ public class Binding<T extends Monad> extends Monad {
 	protected final Type type;
 
 	public Binding(LogicalExpression left, LogicalExpression right, Variable variable) {
-		assert((left instanceof Monad) || (left instanceof Variable));
-		assert((right instanceof Monad) || (right instanceof Variable));
+	    assert(left.getType() instanceof MonadType);
+		assert(right.getType() instanceof MonadType);
 		this.left = left;
 		this.right = right;
 		this.variable = variable;
@@ -85,13 +85,18 @@ public class Binding<T extends Monad> extends Monad {
 	@Override
 	public MonadParams exec(MonadParams arg, Map<Variable, LogicalExpression> bindings) {
 		assert(!(left instanceof Variable) && !(right instanceof Variable));
-		T leftMonad = (T) left;
-		T rightMonad = (T) right;
+		Monad leftMonad = (Monad) left;
+		Monad rightMonad = (Monad) right;
 		MonadParams leftOutput = leftMonad.exec(arg, bindings);
 		LogicalExpression logicalOut = leftOutput.getOutput();
 		bindings.put(this.variable, logicalOut);
-		MonadParams rightOutput = rightMonad.exec(leftOutput, bindings);
-		return rightOutput;
+		return rightMonad.exec(leftOutput, bindings);
+	}
+
+
+	@Override
+	public LogicalExpression getBody() {
+	    throw new NoSuchMethodError("Binding has no body");
 	}
 
 	@Override
@@ -183,14 +188,14 @@ public class Binding<T extends Monad> extends Monad {
 			return false;
 		}
 		if (variable.getType().equals(other.variable.getType())) {
-			// I'm not sure if this is necessary - I'm just copying Lambda.
 			mapping.push(variable, other.variable);
 		} else {
 			return false;
 		}
 
 		final boolean ret = right.equals(other.right, mapping);
-		mapping.pop(variable);
+		// Keep the variable in case it appears in tower bottom
+		// TODO: What about other variables, like lambda variables?
 
 		return ret;
 	}
@@ -205,6 +210,19 @@ public class Binding<T extends Monad> extends Monad {
 
 	public Variable getVariable() {
 		return variable;
+	}
+
+	// TODO: This could probably be more efficient.
+	public Set<Variable> getBoundVariables() {
+		Set<Variable> ret = new HashSet<>();
+		if (left instanceof Binding) {
+			ret.addAll(((Binding) left).getBoundVariables());
+		}
+		if (right instanceof Binding) {
+			ret.addAll(((Binding) right).getBoundVariables());
+		}
+		ret.add(variable);
+		return ret;
 	}
 
 	public static class Reader implements IReader<Binding> {
@@ -240,7 +258,7 @@ public class Binding<T extends Monad> extends Monad {
 				final LogicalExpression m2 = reader.read(
 						lispReader.next(), mapping, typeRepository,
 						typeComparator);
-				assert((m2 instanceof Variable) || (m2 instanceof Monad));
+				assert(m2.getType() instanceof MonadType);
 
 				// Verify that we don't have any more elements.
 				if (lispReader.hasNext()) {

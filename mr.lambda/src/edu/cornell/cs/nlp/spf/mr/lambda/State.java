@@ -61,4 +61,8 @@ public class State<T extends Variable> {
         }
         return true;
     }
+
+    public int size() {
+        return state.size();
+    }
 }

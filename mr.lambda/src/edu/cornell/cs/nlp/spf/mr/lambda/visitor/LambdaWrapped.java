@@ -117,12 +117,17 @@ public class LambdaWrapped implements ILogicalExpressionVisitor {
 
 	@Override
 	public void visit(Tower tower) {
+		tower.getBottom().accept(this);
+		tempReturn = new Tower(tower.getTop(), tempReturn);
+		// Experiment: what if we don't wrap tower tops?
+		/*
 		tower.getTop().accept(this);
 		Lambda newTop = (Lambda) tempReturn;
 		tower.getBottom().accept(this);
 		LogicalExpression newBottom = tempReturn;
 		// don't wrap continuation tower
 		tempReturn = new Tower(newTop, newBottom);
+		*/
 	}
 
 	@Override

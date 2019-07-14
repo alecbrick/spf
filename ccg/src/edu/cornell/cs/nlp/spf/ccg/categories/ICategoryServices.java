@@ -16,6 +16,8 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.ccg.categories;
 
+import edu.cornell.cs.nlp.utils.composites.Pair;
+
 import java.io.Serializable;
 
 /**
@@ -43,7 +45,7 @@ public interface ICategoryServices<MR> extends Serializable {
 	 * Compose the given categories, so the logical forms will compose to
 	 * primary(secondary).
 	 *
-	 * @param corss
+	 * @param cross
 	 *            Do cross composition (crossed directionality).
 	 * @return null if the composition fails.
 	 */
@@ -79,5 +81,4 @@ public interface ICategoryServices<MR> extends Serializable {
 	 * Read semantics from a string.
 	 */
 	MR readSemantics(String string);
-
 }

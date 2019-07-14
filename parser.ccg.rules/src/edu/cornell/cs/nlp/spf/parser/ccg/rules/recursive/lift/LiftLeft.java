@@ -8,15 +8,16 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class LiftLeft<MR> extends AbstractLift<MR> {
-
-    public LiftLeft(String label, ITowerCategoryServices<MR> towerCategoryServices,
-                    BinaryRuleSet baseRules) {
+    public LiftLeft(String label,
+                    ITowerCategoryServices<MR> towerCategoryServices,
+                    BinaryRuleSet<MR> baseRules) {
         super(label + "Left", towerCategoryServices, baseRules);
     }
 
@@ -33,9 +34,10 @@ public class LiftLeft<MR> extends AbstractLift<MR> {
         TowerCategory<MR> rightTower = (TowerCategory<MR>) right;
         Category<MR> rightBase = towerCategoryServices.getBase(rightTower);
 
-        // Don't raise unnecessarily
+        // Don't lift unnecessarily
         // TODO i think it's broken
-        List<IRecursiveBinaryParseRule<MR>> newValidRules = new ArrayList(validRules);
+        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+                new ArrayList<>(validRules);
         if ((left instanceof TowerCategory)) {
             TowerCategory leftTower = (TowerCategory) left;
             if (leftTower.height() == rightTower.height()) {
@@ -53,8 +55,27 @@ public class LiftLeft<MR> extends AbstractLift<MR> {
             TowerCategory<MR> resultTower =
                     towerCategoryServices.replaceBase(
                             rightTower, resultCategory);
-            RuleName newRuleName = createRuleName(result);
+            RuleName newRuleName = RecursiveRuleName.create(name.getLabel(),
+                    result.getRuleName());
             ret.add(new ParseRuleResult<>(newRuleName, resultTower));
+        }
+
+        TowerCategory<MR> leftMonadTower = towerCategoryServices.monadicLift(
+                left, rightTower.getSyntax().getLeft());
+        if (leftMonadTower == null) {
+            return ret;
+        }
+        // We use combination so as not to duplicate code, but since this
+        // is a lift, we need to replace the rule name.
+        results = combination.applyRecursive(leftMonadTower, right, span,
+                newValidRules);
+        for (ParseRuleResult<MR> result : results) {
+            RecursiveRuleName oldRuleName =
+                    (RecursiveRuleName) result.getRuleName();
+            RecursiveRuleName newRuleName = RecursiveRuleName.create(
+                    name.getLabel(), oldRuleName.getChild());
+            ret.add(new ParseRuleResult<>(newRuleName,
+                    result.getResultCategory()));
         }
         return ret;
     }

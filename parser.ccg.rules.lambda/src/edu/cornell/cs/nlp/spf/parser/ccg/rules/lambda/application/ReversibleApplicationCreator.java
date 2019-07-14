@@ -93,5 +93,4 @@ public class ReversibleApplicationCreator implements
 						"Max size of arguments to group together from recursive literals (default: 3)")
 				.build();
 	}
-
 }

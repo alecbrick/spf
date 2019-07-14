@@ -19,11 +19,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
  * Get a set of all the free variables in a logical expression.
@@ -79,5 +75,13 @@ public class GetAllFreeVariables implements ILogicalExpressionVisitor {
 		if (!boundVariables.contains(variable)) {
 			freeVariables.add(variable);
 		}
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		binding.getLeft().accept(this);
+		boundVariables.add(binding.getVariable());
+		binding.getRight().accept(this);
+		boundVariables.remove(binding.getVariable());
 	}
 }

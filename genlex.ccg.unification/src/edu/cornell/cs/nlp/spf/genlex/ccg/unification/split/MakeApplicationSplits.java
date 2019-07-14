@@ -481,7 +481,7 @@ public class MakeApplicationSplits {
 				input);
 	}
 
-	static Set<SplittingPair> of(Category<LogicalExpression> originalCategory,
+	public static Set<SplittingPair> of(Category<LogicalExpression> originalCategory,
 			ICategoryServices<LogicalExpression> categoryServices) {
 		// Get all sub-expressions and predicates
 		final Map<LogicalExpression, Counter> subExpressions = new HashMap<LogicalExpression, Counter>();

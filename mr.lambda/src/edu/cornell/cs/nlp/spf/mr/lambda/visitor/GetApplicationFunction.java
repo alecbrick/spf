@@ -23,12 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.cornell.cs.nlp.spf.base.collections.PowerSet;
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.SkolemId;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.comparators.SkolemIdInstanceWrapper;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMappingOverlay;
@@ -362,6 +357,48 @@ public class GetApplicationFunction implements ILogicalExpressionVisitor {
 		result = variable;
 	}
 
+    @Override
+	public void visit(StateMonad stateM) {
+		++currentDepth;
+		try {
+			if (currentDepth > maxDepth) {
+				result = stateM;
+				return;
+			}
+			stateM.getBody().accept(this);
+			if (result != stateM.getBody()) {
+				result = new StateMonad(result, stateM.getState());
+			} else {
+				result = stateM;
+			}
+		} finally {
+			--currentDepth;
+		}
+	}
+
+    @Override
+	public void visit(Binding binding) {
+		++currentDepth;
+		try {
+			if (currentDepth > maxDepth) {
+				result = binding;
+				return;
+			}
+			binding.getLeft().accept(this);
+			LogicalExpression newLeft = result;
+			binding.getRight().accept(this);
+			LogicalExpression newRight = result;
+			if (newLeft != binding.getLeft() ||
+					newRight != binding.getRight()) {
+				result = new Binding(newLeft, newRight, binding.getVariable());
+			} else {
+				result = binding;
+			}
+		} finally {
+			--currentDepth;
+		}
+	}
+
 	/**
 	 * Tests whether a candidate sub-expression is the result of an application
 	 * replacement. Exposed for unit test only.
@@ -557,6 +594,75 @@ public class GetApplicationFunction implements ILogicalExpressionVisitor {
 					result = false;
 					return;
 				}
+			}
+		}
+
+
+		@Override
+		public void visit(StateMonad stateM) {
+			if (isDirectlyMatched(stateM)) {
+				return;
+			}
+
+			if (!(argument instanceof StateMonad)) {
+				result = false;
+				return;
+			}
+
+			final StateMonad argStateM = (StateMonad) argument;
+			final State state = stateM.getState();
+			final State argState = argStateM.getState();
+			if (!(state.equals(argState, scope))) {
+				result = false;
+				return;
+			}
+
+			// Visit the body.
+			argument = argStateM.getBody();
+			stateM.getBody().accept(this);
+		}
+
+		@Override
+		public void visit(Binding binding) {
+			if (isDirectlyMatched(binding)) {
+				return;
+			}
+
+			if (!(argument instanceof Binding)) {
+				result = false;
+				return;
+			}
+
+			final Binding argBinding = (Binding) argument;
+
+			argument = argBinding.getLeft();
+			binding.getLeft().accept(this);
+
+			// Update the variable scope mapping.
+			scope.push(binding.getVariable(), argBinding.getVariable());
+
+			// If the variable of argBinding is used in the stripped variables
+			// mapping, we need to remove it from there, since that mapping
+			// relies on an unscoped instance.
+			final boolean removedFromStrippedVariables;
+			final LogicalExpression storedValue;
+			if (externalVariableMapping.containsKey(argBinding.getVariable())) {
+				removedFromStrippedVariables = true;
+				storedValue = externalVariableMapping.get(argBinding
+						.getVariable());
+			} else {
+				removedFromStrippedVariables = false;
+				storedValue = null;
+			}
+
+			// Visit the body.
+			argument = argBinding.getRight();
+			binding.getRight().accept(this);
+
+			if (removedFromStrippedVariables) {
+				// Restore mapping, if changed.
+				externalVariableMapping.put(argBinding.getVariable(),
+						storedValue);
 			}
 		}
 

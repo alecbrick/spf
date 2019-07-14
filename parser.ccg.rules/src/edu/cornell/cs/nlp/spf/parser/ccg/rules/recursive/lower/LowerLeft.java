@@ -4,9 +4,12 @@ import edu.cornell.cs.nlp.spf.ccg.categories.Category;
 import edu.cornell.cs.nlp.spf.ccg.categories.ITowerCategoryServices;
 import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class LowerLeft<MR> extends AbstractLower<MR> {
 
@@ -25,12 +28,22 @@ public class LowerLeft<MR> extends AbstractLower<MR> {
         if (!(left instanceof TowerCategory)) {
             return new ArrayList<>();
         }
+        if (!towerCategoryServices.hasMonadicBaseArg(right)) {
+            return new ArrayList<>();
+        }
         TowerCategory<MR> leftTower = (TowerCategory<MR>) left;
         Category<MR> loweredLeft = towerCategoryServices.lower(leftTower);
+        if (loweredLeft == null) {
+            return new ArrayList<>();
+        }
         System.out.println(loweredLeft);
 
+        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+                new ArrayList<>(validRules);
+        newValidRules.removeIf(r -> r instanceof LiftLeft);
+
         List<ParseRuleResult<MR>> results =
-                combineRecursive(loweredLeft, right, span, validRules);
+                combineRecursive(loweredLeft, right, span, newValidRules);
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
         for (ParseRuleResult<MR> result : results) {
             Category<MR> resultCategory = result.getResultCategory();

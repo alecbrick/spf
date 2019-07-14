@@ -16,6 +16,7 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.ccg.categories;
 
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 
 import java.io.Serializable;
@@ -29,9 +30,10 @@ import java.io.Serializable;
  */
 public interface ITowerCategoryServices<MR> extends Serializable {
 
-	Category<MR> getBase(TowerCategory<MR> tower);
+	Category<MR> getBase(Category<MR> cat);
 
 	MR getTopSemantics(TowerCategory<MR> tower);
+
 	MR getBottomSemantics(TowerCategory<MR> tower);
 
 	TowerCategory<MR> combineTowersWithBase(
@@ -39,7 +41,8 @@ public interface ITowerCategoryServices<MR> extends Serializable {
 			TowerCategory<MR> rightTower,
 			Category<MR> newBase);
 
-	TowerCategory<MR> raise(Category<MR> toRaise);
+	TowerCategory<MR> lift(Category<MR> toRaise);
+
 	Category<MR> lower(TowerCategory<MR> toLower);
 
 	TowerCategory<MR> replaceBase(
@@ -52,5 +55,16 @@ public interface ITowerCategoryServices<MR> extends Serializable {
 	@Override
 	int hashCode();
 
-    boolean canCombineTops(TowerCategory<MR> leftTower, TowerCategory<MR> rightTower);
+	boolean canCombineTops(TowerCategory<MR> leftTower, TowerCategory<MR> rightTower);
+
+	TowerCategory<MR> monadicLift(Category<MR> toLift, Syntax patternSyntax);
+
+	// If tower, true if base is true
+	// If complex, true if argument is monadic
+	// Otherwise, false
+	boolean hasMonadicBaseArg(Category<MR> cat);
+
+	MR towerToLambda(MR tower);
+
+	MR lambdaToTower(MR lambda);
 }

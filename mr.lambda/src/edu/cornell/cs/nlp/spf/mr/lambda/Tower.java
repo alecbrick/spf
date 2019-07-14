@@ -19,6 +19,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpressionReader.IReader;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
+import edu.cornell.cs.nlp.spf.mr.language.type.ComplexType;
 import edu.cornell.cs.nlp.spf.mr.language.type.TowerType;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
@@ -77,6 +78,11 @@ public class Tower extends LogicalExpression
 		ReferenceSet<Variable> bottomFree = new ReferenceOpenHashSet<>(bottom.getFreeVariables());
 		topFree.retainAll(bottomFree);
 		this.freeVariables = topFree;
+	}
+
+	// Converts a lambda into an equivalent Tower expression.
+	public Tower(Lambda lambda) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -180,6 +186,10 @@ public class Tower extends LogicalExpression
 
 		return ret;
 	}
+
+
+
+
 
 	public static class Reader implements IReader<Tower> {
 

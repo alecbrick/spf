@@ -54,7 +54,7 @@ public class TowerSplitterTest {
         final Category<LogicalExpression> category = TestServices
                 .getCategoryServices().read(
                         "N/N : (lambda $0:<e,t> (lambda $1:e (and:<t*,t> (loc:<lo,<lo,t>> $1 alaska:s) ($0 $1))))");
-        testSplits(category, false);
+        testSplits(category, true);
     }
 
     @Test
@@ -71,6 +71,30 @@ public class TowerSplitterTest {
                 .getCategoryServices()
                 .read("S//(N/N)\\\\S : [(lambda $0:<<e,t>,e> $0][(lambda $0:<e,t> (lambda $1:e (and:<t*,t> (loc:<lo,<lo,t>> $1 alaska:s) ($0 $1))))]");
         testSplits(category, false);
+    }
+
+    @Test
+    public void getMonadicSplitsTest1() {
+        final Category<LogicalExpression> category = TestServices
+                .getCategoryServices()
+                .read("NP/N : (lambda $0:<e,t> (stateM (the:<<e,t>,e> (lambda $1:e ($0 $1)) ) ()))");
+        testSplits(category, true);
+    }
+
+    @Test
+    public void getMonadicSplitsTest2() {
+        final Category<LogicalExpression> category = TestServices
+                .getCategoryServices()
+                .read("S/NP : (lambda $0:<e,t> (stateM (the:<<e,t>,e> (lambda $1:e ($0 $1)) ) ()))");
+        testSplits(category, true);
+    }
+
+    @Test
+    public void getMonadicSplitsTest3() {
+        final Category<LogicalExpression> category = TestServices
+                .getCategoryServices()
+                .read("S//(N/N)\\\\S : [(lambda $0:M[<<e,t>,e>] $0][(lambda $0:<e,t> (stateM (the:<<e,t>,e> (lambda $1:e ($0 $1)) ) ()))]");
+        testSplits(category, true);
     }
 
 }

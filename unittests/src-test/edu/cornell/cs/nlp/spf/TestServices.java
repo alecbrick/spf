@@ -18,18 +18,19 @@ package edu.cornell.cs.nlp.spf;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
-import edu.cornell.cs.nlp.spf.ccg.categories.ITowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.MonadServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.BinaryRuleSet;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IRecursiveBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.BackwardReversibleApplication;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.BackwardApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ForwardApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.BackwardComposition;
@@ -42,16 +43,19 @@ public class TestServices {
 
 	public static final LogicalExpressionCategoryServices	CATEGORY_SERVICES;
 	public static final TowerCategoryServices				TOWER_CATEGORY_SERVICES;
+	public static final MonadServices MONAD_SERVICES;
 
 	public static final List<File>							DEFAULT_ONTOLOGY_FILES;
 	public static final File								DEFAULT_TYPES_FILE;
 
 	public static final BinaryRuleSet<LogicalExpression> BASE_RULES;
 	public static final List<IRecursiveBinaryParseRule<LogicalExpression>> RECURSIVE_RULES;
+	public static final List<IBinaryReversibleParseRule<LogicalExpression>> BASE_REVERSIBLE_RULES;
 
 	private TestServices() {
 		// Private ctor. Nothing to init. Service class.
 	}
+
 
 	static {
 		DEFAULT_TYPES_FILE = new File("resources-test/geo.types");
@@ -91,15 +95,26 @@ public class TestServices {
 		// CCG LogicalExpression category services for handling categories
 		// with LogicalExpression as semantics
 		CATEGORY_SERVICES = new LogicalExpressionCategoryServices(true);
-		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true);
+		MONAD_SERVICES = new MonadServices();
+		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true, MONAD_SERVICES);
 
-		List<IBinaryParseRule> baseRules = new ArrayList<>();
+		List<IBinaryParseRule<LogicalExpression>> baseRules = new ArrayList<>();
 		baseRules.add(new ForwardApplication<>(CATEGORY_SERVICES));
 		baseRules.add(new BackwardApplication<>(CATEGORY_SERVICES));
 		baseRules.add(new ForwardComposition<>(CATEGORY_SERVICES, 1, false));
 		baseRules.add(new BackwardComposition<>(CATEGORY_SERVICES, 1, false));
+		BASE_RULES = new BinaryRuleSet<>(baseRules);
 
-		BASE_RULES = new BinaryRuleSet(baseRules);
+		List<IBinaryReversibleParseRule<LogicalExpression>> baseReversibleRules = new ArrayList<>();
+		Set<String> attributes = new HashSet<>();
+		attributes.add("sg");
+		attributes.add("pl");
+		baseReversibleRules.add(new ForwardReversibleApplication(
+				CATEGORY_SERVICES, 3, 9, true, attributes));
+		baseReversibleRules.add(new BackwardReversibleApplication(
+				CATEGORY_SERVICES, 3, 9, true, attributes));
+		BASE_REVERSIBLE_RULES = baseReversibleRules;
+
 
 		RECURSIVE_RULES = new ArrayList<>();
 		RECURSIVE_RULES.add(new Combination<>("C", TOWER_CATEGORY_SERVICES, BASE_RULES));
@@ -115,8 +130,12 @@ public class TestServices {
 		// Nothing to do.
 	}
 
-	public static ITowerCategoryServices<LogicalExpression> getTowerCategoryServices() {
+	public static TowerCategoryServices getTowerCategoryServices() {
 	    return TOWER_CATEGORY_SERVICES;
+	}
+
+	public static MonadServices getMonadServices() {
+		return MONAD_SERVICES;
 	}
 
 	public static BinaryRuleSet<LogicalExpression> getBaseRules() {
@@ -125,5 +144,9 @@ public class TestServices {
 
 	public static List<IRecursiveBinaryParseRule<LogicalExpression>> getRecursiveRules() {
 		return RECURSIVE_RULES;
+	}
+
+	public static List<IBinaryReversibleParseRule<LogicalExpression>> getBaseReversibleRules() {
+		return BASE_REVERSIBLE_RULES;
 	}
 }

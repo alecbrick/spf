@@ -19,11 +19,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 
 /**
  * Return all sub expressions of a given expression. The list of sub expressions
@@ -77,6 +73,19 @@ public class AllSubExpressions implements ILogicalExpressionVisitor {
 	@Override
 	public void visit(Variable variable) {
 		// Nothing to do here
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		subExpressions.add(stateM);
+		stateM.getBody().accept(this);
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		subExpressions.add(binding);
+		binding.getLeft().accept(this);
+		binding.getRight().accept(this);
 	}
 
 }

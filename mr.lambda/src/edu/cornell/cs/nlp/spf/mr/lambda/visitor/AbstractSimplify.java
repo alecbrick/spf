@@ -250,6 +250,12 @@ public abstract class AbstractSimplify implements ILogicalExpressionVisitor {
 	public void visit(StateMonad stateM) {
 	    // TODO: might be different this is just temp!
 		stateM.getBody().accept(this);
+		// Some operations leave us with a state monad inside a
+		// state monad. This solution is a little hacky but whatever
+		while (result instanceof StateMonad &&
+				(((StateMonad) result).getState().size() == 0)) {
+			result = ((StateMonad) result).getBody();
+		}
 		result = new StateMonad(result, stateM.getState());
 	}
 
@@ -257,10 +263,10 @@ public abstract class AbstractSimplify implements ILogicalExpressionVisitor {
 	public void visit(Binding binding) {
 		// TODO: is this where we want exec?
 		binding.getLeft().accept(this);
-		final LogicalExpression newLeft = result;
+		LogicalExpression newLeft = result;
 
 		binding.getRight().accept(this);
-		final LogicalExpression newRight = result;
+		LogicalExpression newRight = result;
 
 		if (newLeft.equals(binding.getLeft()) &&
 			newRight.equals(binding.getRight())) {

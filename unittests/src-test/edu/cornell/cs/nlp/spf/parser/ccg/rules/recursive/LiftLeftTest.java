@@ -1,8 +1,10 @@
 package edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive;
 
 import edu.cornell.cs.nlp.spf.TestServices;
+import edu.cornell.cs.nlp.spf.ccg.categories.Category;
 import edu.cornell.cs.nlp.spf.ccg.categories.ComplexCategory;
 import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
+import edu.cornell.cs.nlp.spf.mr.lambda.Monad;
 import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
 import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
@@ -20,7 +22,7 @@ public class LiftLeftTest {
     }
 
     @Test
-	public void test() {
+	public void test1() {
 		final ComplexCategory<LogicalExpression> primary = (ComplexCategory<LogicalExpression>) TestServices
 				.getCategoryServices()
 				.read("NP/N : (lambda $0:<e,t> (the:<<e,t>,e> (lambda $1:e ($0 $1))))");
@@ -39,10 +41,30 @@ public class LiftLeftTest {
 				.read("S//(NP/N)\\\\S : [(lambda $0:<<e,t>,e> $0)][(lambda $1:<e,t> (the:<<e,t>,e> (lambda $2:e (and:<t*,t> (loc:<lo,<lo,t>> $2 alaska:s) ($1 $2)))))]");
 		boolean hasExpected = false;
 		for (ParseRuleResult<LogicalExpression> result : actual) {
+			System.out.println(result);
 			if (result.getResultCategory().equals(expected)) {
 				hasExpected = true;
 			}
 		}
 		Assert.assertTrue(hasExpected);
+	}
+
+	@Test
+	public void test2() {
+		final Category<LogicalExpression> primary = (Category<LogicalExpression>) TestServices
+				.getCategoryServices()
+				.read("N : (stateM (house:<e,t>) ())");
+		final TowerCategory<LogicalExpression> secondary = (TowerCategory<LogicalExpression>) TestServices
+				.getCategoryServices()
+				.read("S//(N/N)\\\\S : [(lambda $0:<<e,t>,e> $0][(lambda $0:<e,t> (lambda $1:e (and:<t*,t> (loc:<lo,<lo,t>> $1 alaska:s) ($0 $1))))]");
+
+		Assert.assertTrue(primary.getSemantics() instanceof Monad);
+		Assert.assertTrue(secondary.getSemantics() instanceof Tower);
+
+        final LiftLeft<LogicalExpression> rule = new LiftLeft<>(
+				"^", TestServices.getTowerCategoryServices(), TestServices.getBaseRules());
+		final List<ParseRuleResult<LogicalExpression>> actual = rule.applyRecursive(primary,
+				secondary, null, new ArrayList<>());
+
 	}
 }

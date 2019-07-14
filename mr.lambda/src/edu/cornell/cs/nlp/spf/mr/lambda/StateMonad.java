@@ -58,6 +58,10 @@ public class StateMonad extends Monad {
 
 	protected final Set<Variable>		freeVariables;
 
+	public StateMonad(LogicalExpression body) {
+		this(body, new State<>(), LogicLanguageServices.getTypeRepository());
+	}
+
 	public StateMonad(LogicalExpression body, State<SkolemId> state) {
 		this(body, state, LogicLanguageServices.getTypeRepository());
 	}
@@ -156,6 +160,7 @@ public class StateMonad extends Monad {
 		return freeVariables.size();
 	}
 
+	@Override
 	public LogicalExpression getBody() {
 		return body;
 	}

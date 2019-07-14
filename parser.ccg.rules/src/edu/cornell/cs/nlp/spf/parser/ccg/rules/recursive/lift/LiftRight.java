@@ -15,8 +15,9 @@ import java.util.List;
 
 public class LiftRight<MR> extends AbstractLift<MR> {
 
-    public LiftRight(String label, ITowerCategoryServices<MR> towerCategoryServices,
-                    BinaryRuleSet baseRules) {
+    public LiftRight(String label,
+                     ITowerCategoryServices<MR> towerCategoryServices,
+                     BinaryRuleSet<MR> baseRules) {
         super(label + "Right", towerCategoryServices, baseRules);
     }
 
@@ -33,7 +34,8 @@ public class LiftRight<MR> extends AbstractLift<MR> {
         TowerCategory<MR> leftTower = (TowerCategory<MR>) left;
         Category<MR> leftBase = towerCategoryServices.getBase(leftTower);
 
-        List<IRecursiveBinaryParseRule<MR>> newValidRules = new ArrayList<>(validRules);
+        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+                new ArrayList<>(validRules);
         if ((right instanceof TowerCategory)) {
             TowerCategory rightTower = (TowerCategory) right;
             if (leftTower.height() == rightTower.height()) {
@@ -51,8 +53,27 @@ public class LiftRight<MR> extends AbstractLift<MR> {
             TowerCategory<MR> resultTower =
                     towerCategoryServices.replaceBase(
                             leftTower, resultCategory);
-            RuleName newRuleName = createRuleName(result);
+            RuleName newRuleName = RecursiveRuleName.create(name.getLabel(),
+                    result.getRuleName());
             ret.add(new ParseRuleResult<>(newRuleName, resultTower));
+        }
+
+        TowerCategory<MR> rightMonadTower = towerCategoryServices.monadicLift(
+                right, leftTower.getSyntax().getLeft());
+        if (rightMonadTower == null) {
+            return ret;
+        }
+        // We use combination so as not to duplicate code, but since this
+        // is a lift, we need to replace the rule name.
+        results = combination.applyRecursive(left, rightMonadTower, span,
+                newValidRules);
+        for (ParseRuleResult<MR> result : results) {
+            RecursiveRuleName oldRuleName =
+                    (RecursiveRuleName) result.getRuleName();
+            RecursiveRuleName newRuleName = RecursiveRuleName.create(
+                    name.getLabel(), oldRuleName.getChild());
+            ret.add(new ParseRuleResult<>(newRuleName,
+                    result.getResultCategory()));
         }
         return ret;
     }

@@ -19,11 +19,7 @@ package edu.cornell.cs.nlp.spf.genlex.ccg.unification.split;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.AllSubExpressions;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ILogicalExpressionVisitor;
 
@@ -97,6 +93,20 @@ public class AllConstrainedSubExpressions implements ILogicalExpressionVisitor {
 	@Override
 	public void visit(Variable variable) {
 		// Nothing to do here
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		addSubExpression(stateM);
+		stateM.getBody().accept(this);
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		addSubExpression(binding);
+		// Do we have to do the weird thing they do for Literals? TODO: Investigate
+		binding.getLeft().accept(this);
+		binding.getRight().accept(this);
 	}
 
 	private boolean addSubExpression(LogicalExpression sub) {

@@ -43,9 +43,6 @@ public class TowerCategory<MR> extends Category<MR> {
 	public TowerCategory(TowerSyntax syntax, MR semantics) {
 		super(semantics);
 		assert (semantics instanceof ITowerSemantics);
-		if (semantics instanceof Lambda) {
-			System.out.println("AAAAAAAAAAAAAAAAAAAAA");
-		}
 		this.syntax = syntax;
 		this.hashCodeCache = calcHashCode();
 	}
@@ -103,6 +100,7 @@ public class TowerCategory<MR> extends Category<MR> {
 		return syntax.hashCode();
 	}
 
+	@Override
 	public int height() {
 		return syntax.height();
 	}

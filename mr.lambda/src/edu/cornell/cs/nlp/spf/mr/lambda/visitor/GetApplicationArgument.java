@@ -22,13 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicLanguageServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.SkolemId;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.mapping.ScopeMappingOverlay;
 import edu.cornell.cs.nlp.spf.mr.language.type.RecursiveComplexType;
@@ -407,6 +401,53 @@ public class GetApplicationArgument implements ILogicalExpressionVisitor {
 		} else {
 			isValid = variable.equals(applicationResult, scope);
 		}
+	}
+
+    @Override
+	public void visit(StateMonad stateMonad) {
+		if (!(applicationResult instanceof StateMonad) || !stateMonad.getType()
+				.isExtendingOrExtendedBy(applicationResult.getType())) {
+			isValid = false;
+			return;
+		}
+
+		if (!stateMonad.containsFreeVariable(applicationArgument)) {
+			isValid = stateMonad.equals(applicationResult, scope);
+			return;
+		}
+
+		applicationResult = ((StateMonad) applicationResult).getBody();
+		stateMonad.getBody().accept(this);
+	}
+
+    @Override
+	public void visit(Binding binding) {
+		if (!(applicationResult instanceof Binding) || !binding.getType()
+				.isExtendingOrExtendedBy(applicationResult.getType())) {
+			isValid = false;
+			return;
+		}
+
+		if (!binding.containsFreeVariable(applicationArgument)) {
+			isValid = binding.equals(applicationResult, scope);
+			return;
+		}
+
+		if (!binding.getVariable().getType()
+				.equals(((Binding) applicationResult).getVariable().getType())) {
+			isValid = false;
+			return;
+		}
+
+		Binding appResultBinding = (Binding) applicationResult;
+		applicationResult = appResultBinding.getLeft();
+		binding.getLeft().accept(this);
+
+		scope.push(binding.getVariable(),
+				appResultBinding.getVariable());
+		applicationResult = appResultBinding.getRight();
+		binding.getRight().accept(this);
+		scope.pop(binding.getVariable());
 	}
 
 	private void visitConventionalLiteral(Literal sourceLiteral,

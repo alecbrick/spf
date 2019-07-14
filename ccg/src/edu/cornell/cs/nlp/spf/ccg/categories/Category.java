@@ -103,6 +103,10 @@ public abstract class Category<MR> implements Serializable {
 
 	abstract public int numSlashes();
 
+	public int height() {
+		return 1;
+	}
+
 	protected int calcHashCode() {
 		if (semantics == null) {
 			return 0;
