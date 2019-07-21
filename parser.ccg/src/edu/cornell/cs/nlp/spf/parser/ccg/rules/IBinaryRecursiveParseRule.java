@@ -18,7 +18,6 @@ package edu.cornell.cs.nlp.spf.parser.ccg.rules;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -26,7 +25,7 @@ import java.util.List;
  *
  * @author Alec Brickner
  */
-public interface IRecursiveBinaryParseRule<MR> extends IBinaryParseRule<MR> {
+public interface IBinaryRecursiveParseRule<MR> extends IBinaryParseRule<MR> {
 
 	/**
 	 * Takes two categories, left and right, as input. Assumes these categories
@@ -37,5 +36,5 @@ public interface IRecursiveBinaryParseRule<MR> extends IBinaryParseRule<MR> {
 	 */
 	List<ParseRuleResult<MR>> applyRecursive(Category<MR> left, Category<MR> right,
 									SentenceSpan span,
-									List<IRecursiveBinaryParseRule<MR>> validRules);
+									List<IBinaryRecursiveParseRule<MR>> validRules);
 }

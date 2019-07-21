@@ -5,11 +5,13 @@ import edu.cornell.cs.nlp.spf.ccg.categories.Category;
 import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
 import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.mr.lambda.Monad;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.ParseRuleResult;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -22,12 +24,17 @@ public class ReversibleTowerRuleTest {
                TestServices.getTowerCategoryServices(),
                 TestServices.getRecursiveRules(),
                 TestServices.getCategoryServices(),
-                TestServices.getMonadServices(),
                 TestServices.getBaseReversibleRules(),
                 forwardApp);
         Set<Category<LogicalExpression>> rights = reversibleTowerRule.reverseApplyLeft(
                 left, result, null
         );
+
+        Category<LogicalExpression> execResult = null;
+        if (result.getSemantics() instanceof Monad) {
+            Monad resultSem = (Monad) result.getSemantics();
+            execResult = Category.create(result.getSyntax(), resultSem.exec().getOutput());
+        }
 
         int i = 1;
         for (Category<LogicalExpression> right : rights) {
@@ -37,14 +44,18 @@ public class ReversibleTowerRuleTest {
                 System.out.println("Right: " + right);
             }
             List<ParseRuleResult<LogicalExpression>> results =
-                    reversibleTowerRule.applyRecursive(left, right, null, TestServices.getRecursiveRules());
+                    reversibleTowerRule.applyRecursive(left, right, null, new ArrayList<>(TestServices.getRecursiveRules()));
+            if (debug) {
+                System.out.println("Results: " + results);
+            }
             // Tower rule doesn't apply to base categories
             if (!(left instanceof TowerCategory || right instanceof TowerCategory)) {
                 continue;
             }
             boolean found = false;
             for (ParseRuleResult<LogicalExpression> res : results) {
-                if (res.getResultCategory().equals(result)) {
+                if (res.getResultCategory().equals(result) ||
+                        res.getResultCategory().equals(execResult)) {
                     found = true;
                     break;
                 }
@@ -103,7 +114,7 @@ public class ReversibleTowerRuleTest {
     public void getMonadicSplitsTest3() {
         final Category<LogicalExpression> left = TestServices
                 .getCategoryServices()
-                .read("S//NP\\\\S : [(lambda $0:M[t] (>>= $1:t (stateM (barks:<e,t> (the:<<e,t>,e> (lambda $2:e (dog:<e,t> $2)))) ()) $0))][i:e]");
+                .read("S//NP\\\\S : [(lambda $0:M[t] (>>= $1:t (stateM (barks:<e,t> (the:<<e,t>,e> (lambda $2:e (dog:<e,t> $2)))) ()) $0))][$1]");
         final Category<LogicalExpression> result = TestServices
                 .getCategoryServices()
                 .read("S : (>>= $0:t (stateM (barks:<e,t> (the:<<e,t>,e> dog:<e,t>)) ()) (stateM (thought:<e,<t,t>> i:e $0) () ))");
@@ -112,6 +123,19 @@ public class ReversibleTowerRuleTest {
 
     @Test
     public void getMonadicSplitsTest4() {
+        final Category<LogicalExpression> left = TestServices
+                .getCategoryServices()
+                .read("S//S\\\\S : [(lambda $0:M[<e,t>] (>>= $1:<e,t> (stateM (lambda $2:e (and:<t*,t> (barks:<e,t> $2) (c_REL:<e,<e,t>> $2 (a:<id,<<e,t>,e>> na:id (lambda $3:e (dog:<e,t> $3))  )  )  )   ) ())  $0))][$1]");
+        final Category<LogicalExpression> result = TestServices
+                .getCategoryServices()
+                .read("S//S\\\\S : [(lambda $0:M[<e,t>] (>>= $1:<e,t> (stateM (lambda $2:e (and:<t*,t> (barks:<e,t> $2) (c_REL:<e,<e,t>> $2 (a:<id,<<e,t>,e>> na:id (lambda $3:e (dog:<e,t> $3))  )  )  )   ) ())  $0))]" +
+                        "[(lambda $4:e (and:<t*,t>  (thought:<e,t> $4)  (c_REL:<e,<e,t>> $4 (a:<id,<<e,t>,e>> na:id $1)   )  ) )]");
+                //.read("S//S\\\\S : [(lambda $0:M[<e,t>] (>>= $1:<e,t> (stateM (barks:<e,t> (the:<<e,t>,e> (lambda $2:e (dog:<e,t> $2)))) ()) $0))][(thought:<e,<t,t>> i:e $1)]");
+        testSplits(left, result, true);
+    }
+
+    @Test
+    public void getMonadicSplitsTest5() {
         final Category<LogicalExpression> category = TestServices
                 .getCategoryServices()
                 .read("S//(N/N)\\\\S : [(lambda $0:M[<<e,t>,e>] $0][(lambda $0:<e,t> (stateM (the:<<e,t>,e> (lambda $1:e ($0 $1)) ) ()))]");

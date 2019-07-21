@@ -10,8 +10,8 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 
 public class UnaryLower<MR> implements IUnaryParseRule<MR> {
 	private static final long			serialVersionUID	= -6282371109224310054L;
-	private final ITowerCategoryServices<MR> towerCategoryServices;
-	private final UnaryRuleName ruleName;
+	protected final ITowerCategoryServices<MR> towerCategoryServices;
+	protected final UnaryRuleName ruleName;
 
 	public UnaryLower(String label,
 					  ITowerCategoryServices<MR> towerCategoryServices) {
@@ -21,10 +21,10 @@ public class UnaryLower<MR> implements IUnaryParseRule<MR> {
 
 	@Override
 	public ParseRuleResult<MR> apply(Category<MR> category, SentenceSpan span) {
-		if (category instanceof TowerCategory) {
+		if (!(category instanceof TowerCategory)) {
 			return null;
 		}
-		TowerCategory towerCategory = (TowerCategory) category;
+		TowerCategory<MR> towerCategory = (TowerCategory<MR>) category;
 
 		final Category<MR> lowered = towerCategoryServices.lower(towerCategory);
 

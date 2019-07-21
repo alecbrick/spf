@@ -21,7 +21,7 @@ public class LowerRight<MR> extends AbstractLower<MR> {
             Category<MR> left,
             Category<MR> right,
             SentenceSpan span,
-            List<IRecursiveBinaryParseRule<MR>> validRules) {
+            List<IBinaryRecursiveParseRule<MR>> validRules) {
         // Right must be a tower
         if (!(right instanceof TowerCategory)) {
             return new ArrayList<>();
@@ -37,7 +37,7 @@ public class LowerRight<MR> extends AbstractLower<MR> {
         System.out.println(left);
         System.out.println(loweredRight);
 
-        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+        List<IBinaryRecursiveParseRule<MR>> newValidRules =
                 new ArrayList<>(validRules);
         newValidRules.removeIf(r -> r instanceof LiftRight);
 

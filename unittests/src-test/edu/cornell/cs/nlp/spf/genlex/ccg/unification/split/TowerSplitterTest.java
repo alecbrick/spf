@@ -9,6 +9,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.TowerRule;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public class TowerSplitterTest {
 
         TowerRule<LogicalExpression> towerRule = new TowerRule<>(
                 TestServices.getTowerCategoryServices(),
-                TestServices.getRecursiveRules()
+                new ArrayList<>(TestServices.getRecursiveRules())
         );
         int i = 1;
         for (SplittingServices.SplittingPair pair : actual) {
@@ -33,7 +34,7 @@ public class TowerSplitterTest {
                 System.out.println("Right: " + right);
             }
             List<ParseRuleResult<LogicalExpression>> results =
-                    towerRule.applyRecursive(left, right, null, TestServices.getRecursiveRules());
+                    towerRule.applyRecursive(left, right, null, new ArrayList<>(TestServices.getRecursiveRules()));
             // Tower rule doesn't apply to base categories
             if (!(left instanceof TowerCategory || right instanceof TowerCategory)) {
                 continue;

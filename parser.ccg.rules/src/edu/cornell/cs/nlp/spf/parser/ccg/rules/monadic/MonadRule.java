@@ -1,15 +1,16 @@
 package edu.cornell.cs.nlp.spf.parser.ccg.rules.monadic;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
+import edu.cornell.cs.nlp.spf.ccg.categories.IMonadCategoryServices;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 import edu.cornell.cs.nlp.utils.composites.Pair;
 
 public class MonadRule<MR, M> implements IBinaryParseRule<MR> {
-    private final IMonadServices<MR, M> monadServices;
+    private final IMonadCategoryServices<MR, M> monadServices;
     private final IBinaryParseRule<MR> rule;
     private final UnaryRuleName name = UnaryRuleName.create("m");
 
-    public MonadRule(IBinaryParseRule rule, IMonadServices<MR, M> monadServices) {
+    public MonadRule(IBinaryParseRule rule, IMonadCategoryServices<MR, M> monadServices) {
         this.rule = rule;
         this.monadServices = monadServices;
     }

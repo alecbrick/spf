@@ -28,6 +28,7 @@ import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,10 +88,15 @@ public class StateMonad extends Monad {
 			LogicalExpression arg = bindings.get(v);
 			tempResult = ApplyAndSimplify.of(func, arg);
 		}
-
-		// TODO: What about reading expressions?
+		// Bind the current state to underspecified relations
+		tempResult = MonadServices.bindState(tempResult, state.getState());
 
 		return new StateMonadParams(this.state, tempResult);
+	}
+
+	@Override
+	public MonadParams exec() {
+	    return exec(new StateMonadParams(), new HashMap<>());
 	}
 
 	public boolean doEquals(LogicalExpression exp,

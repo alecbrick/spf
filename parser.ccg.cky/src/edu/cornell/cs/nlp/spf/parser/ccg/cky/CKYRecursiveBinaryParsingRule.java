@@ -20,21 +20,19 @@ import edu.cornell.cs.nlp.spf.parser.ccg.cky.chart.Cell;
 import edu.cornell.cs.nlp.spf.parser.ccg.normalform.NormalFormValidator;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CKYRecursiveBinaryParsingRule<MR> extends CKYBinaryParsingRule<MR> {
 	private static final long			serialVersionUID	= -5629394704296771855L;
 	private final NormalFormValidator	nfValidator;
-	private final IRecursiveBinaryParseRule<MR> rule;
+	private final IBinaryRecursiveParseRule<MR> rule;
 
-	public CKYRecursiveBinaryParsingRule(IRecursiveBinaryParseRule<MR> rule) {
+	public CKYRecursiveBinaryParsingRule(IBinaryRecursiveParseRule<MR> rule) {
 		this(rule, null);
 	}
 
-	public CKYRecursiveBinaryParsingRule(IRecursiveBinaryParseRule<MR> rule,
-										 NormalFormValidator nfValidator) {
+	public CKYRecursiveBinaryParsingRule(IBinaryRecursiveParseRule<MR> rule,
+                                         NormalFormValidator nfValidator) {
 		super(rule, nfValidator);
 		this.rule = rule;
 		this.nfValidator = nfValidator;

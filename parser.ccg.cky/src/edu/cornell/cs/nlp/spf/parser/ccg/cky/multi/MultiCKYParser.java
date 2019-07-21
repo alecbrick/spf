@@ -539,9 +539,9 @@ public class MultiCKYParser<DI extends Sentence, MR>
 		@SuppressWarnings("unchecked")
 		protected void addRule(Builder<DI, MR> builder, Object rule,
 				NormalFormValidator nfValidator, Parameters params) {
-			if (rule instanceof IRecursiveBinaryParseRule) {
+			if (rule instanceof IBinaryRecursiveParseRule) {
 				builder.addParseRule(new CKYRecursiveBinaryParsingRule<MR>(
-						(IRecursiveBinaryParseRule<MR>) rule, nfValidator));
+						(IBinaryRecursiveParseRule<MR>) rule, nfValidator));
 			} else if (rule instanceof IBinaryParseRule) {
 				builder.addParseRule(new CKYBinaryParsingRule<MR>(
 						(IBinaryParseRule<MR>) rule, nfValidator));

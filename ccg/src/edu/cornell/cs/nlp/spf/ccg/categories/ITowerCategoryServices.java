@@ -20,6 +20,7 @@ import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * Category services, such as composition and application.
@@ -45,6 +46,8 @@ public interface ITowerCategoryServices<MR> extends Serializable {
 
 	Category<MR> lower(TowerCategory<MR> toLower);
 
+	Set<TowerCategory<MR>> unlower(Category<MR> toUnlower);
+
 	TowerCategory<MR> replaceBase(
 			TowerCategory<MR> towerForTop,
 			Category<MR> base);
@@ -67,4 +70,5 @@ public interface ITowerCategoryServices<MR> extends Serializable {
 	MR towerToLambda(MR tower);
 
 	MR lambdaToTower(MR lambda);
+
 }

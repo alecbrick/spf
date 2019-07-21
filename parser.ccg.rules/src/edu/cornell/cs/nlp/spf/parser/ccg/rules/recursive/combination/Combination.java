@@ -9,13 +9,13 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.AbstractRecursiveBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.AbstractBinaryRecursiveParseRule;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Combination<MR> extends AbstractRecursiveBinaryParseRule<MR> {
+public class Combination<MR> extends AbstractBinaryRecursiveParseRule<MR> {
 
     public static final String				RULE_LABEL	= "combine";
 
@@ -28,7 +28,7 @@ public class Combination<MR> extends AbstractRecursiveBinaryParseRule<MR> {
     public List<ParseRuleResult<MR>> applyRecursive(Category<MR> left,
                                                     Category<MR> right,
                                                     SentenceSpan span,
-                                                    List<IRecursiveBinaryParseRule<MR>> validRules) {
+                                                    List<IBinaryRecursiveParseRule<MR>> validRules) {
         if (!(left instanceof TowerCategory && right instanceof TowerCategory)) {
             return Collections.emptyList();
         }

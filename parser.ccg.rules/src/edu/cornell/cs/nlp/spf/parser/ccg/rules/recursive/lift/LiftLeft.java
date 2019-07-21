@@ -8,7 +8,6 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +25,7 @@ public class LiftLeft<MR> extends AbstractLift<MR> {
             Category<MR> left,
             Category<MR> right,
             SentenceSpan span,
-            List<IRecursiveBinaryParseRule<MR>> validRules) {
+            List<IBinaryRecursiveParseRule<MR>> validRules) {
         // Right must be a tower
         if (!(right instanceof TowerCategory)) {
             return new ArrayList<>();
@@ -36,7 +35,7 @@ public class LiftLeft<MR> extends AbstractLift<MR> {
 
         // Don't lift unnecessarily
         // TODO i think it's broken
-        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+        List<IBinaryRecursiveParseRule<MR>> newValidRules =
                 new ArrayList<>(validRules);
         if ((left instanceof TowerCategory)) {
             TowerCategory leftTower = (TowerCategory) left;

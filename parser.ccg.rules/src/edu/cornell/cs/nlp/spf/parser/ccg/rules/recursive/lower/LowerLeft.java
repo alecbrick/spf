@@ -7,9 +7,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 
 public class LowerLeft<MR> extends AbstractLower<MR> {
 
@@ -23,7 +21,7 @@ public class LowerLeft<MR> extends AbstractLower<MR> {
             Category<MR> left,
             Category<MR> right,
             SentenceSpan span,
-            List<IRecursiveBinaryParseRule<MR>> validRules) {
+            List<IBinaryRecursiveParseRule<MR>> validRules) {
         // Left must be a tower
         if (!(left instanceof TowerCategory)) {
             return new ArrayList<>();
@@ -38,7 +36,7 @@ public class LowerLeft<MR> extends AbstractLower<MR> {
         }
         System.out.println(loweredLeft);
 
-        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+        List<IBinaryRecursiveParseRule<MR>> newValidRules =
                 new ArrayList<>(validRules);
         newValidRules.removeIf(r -> r instanceof LiftLeft);
 

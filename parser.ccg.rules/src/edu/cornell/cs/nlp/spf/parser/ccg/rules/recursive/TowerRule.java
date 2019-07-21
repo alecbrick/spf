@@ -8,7 +8,6 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,17 +18,17 @@ import java.util.List;
  * Because the recursive rules have an order to how they get applied,
  * this class enforces that order.
  */
-public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
+public class TowerRule<MR> implements IBinaryRecursiveParseRule<MR> {
     private static final String         RULE_LABEL = "vRS";
 
     protected final ITowerCategoryServices<MR> towerCategoryServices;
-    private final List<IRecursiveBinaryParseRule<MR>> recursiveRules;
+    private final List<IBinaryRecursiveParseRule<MR>> recursiveRules;
 
     // TODO: maybe make this parameterizable?
     private final UnaryRuleName towerRuleName = UnaryRuleName.create("tower");
 
     public TowerRule(ITowerCategoryServices<MR> towerCategoryServices,
-                     List<IRecursiveBinaryParseRule<MR>> recursiveRules) {
+                     List<IBinaryRecursiveParseRule<MR>> recursiveRules) {
         this.towerCategoryServices = towerCategoryServices;
         this.recursiveRules = recursiveRules;
     }
@@ -47,7 +46,7 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
     @Override
     public List<ParseRuleResult<MR>> applyRecursive(
             Category<MR> left, Category<MR> right, SentenceSpan span,
-            List<IRecursiveBinaryParseRule<MR>> validRules) {
+            List<IBinaryRecursiveParseRule<MR>> validRules) {
         if (!(left instanceof TowerCategory || right instanceof TowerCategory)) {
             return Collections.emptyList();
         }
@@ -55,7 +54,7 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
         // TODO: delimiting, base pre-computation
 
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
-        for (IRecursiveBinaryParseRule<MR> rule : recursiveRules) {
+        for (IBinaryRecursiveParseRule<MR> rule : recursiveRules) {
             for (ParseRuleResult<MR> result : rule.applyRecursive(left, right, span, recursiveRules)) {
                 ret.add(result);
                 Category<MR> resultCategory = result.getResultCategory();
@@ -94,9 +93,9 @@ public class TowerRule<MR> implements IRecursiveBinaryParseRule<MR> {
         @Override
         public TowerRule<MR> create(ParameterizedExperiment.Parameters params,
                                     IResourceRepository repo) {
-            List<IRecursiveBinaryParseRule<MR>> recursiveRules = new ArrayList<>();
+            List<IBinaryRecursiveParseRule<MR>> recursiveRules = new ArrayList<>();
             for (String id : params.getSplit("rules")) {
-                IRecursiveBinaryParseRule<MR> rule = repo.get(id);
+                IBinaryRecursiveParseRule<MR> rule = repo.get(id);
                 recursiveRules.add(rule);
             }
 

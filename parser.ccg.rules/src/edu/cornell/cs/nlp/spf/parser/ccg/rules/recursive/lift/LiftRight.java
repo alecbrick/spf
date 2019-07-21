@@ -26,7 +26,7 @@ public class LiftRight<MR> extends AbstractLift<MR> {
             Category<MR> left,
             Category<MR> right,
             SentenceSpan span,
-            List<IRecursiveBinaryParseRule<MR>> validRules) {
+            List<IBinaryRecursiveParseRule<MR>> validRules) {
         // Left must be a tower
         if (!(left instanceof TowerCategory)) {
             return new ArrayList<>();
@@ -34,7 +34,7 @@ public class LiftRight<MR> extends AbstractLift<MR> {
         TowerCategory<MR> leftTower = (TowerCategory<MR>) left;
         Category<MR> leftBase = towerCategoryServices.getBase(leftTower);
 
-        List<IRecursiveBinaryParseRule<MR>> newValidRules =
+        List<IBinaryRecursiveParseRule<MR>> newValidRules =
                 new ArrayList<>(validRules);
         if ((right instanceof TowerCategory)) {
             TowerCategory rightTower = (TowerCategory) right;

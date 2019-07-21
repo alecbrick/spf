@@ -22,15 +22,15 @@ import java.util.*;
 
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
-import edu.cornell.cs.nlp.spf.mr.lambda.ccg.MonadServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.MonadCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.language.type.TypeRepository;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.BinaryRuleSet;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IRecursiveBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.BackwardReversibleApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.tower.ReversibleCombination;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.tower.ReversibleLiftLeft;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.tower.ReversibleLiftRight;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.BackwardApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ForwardApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.BackwardComposition;
@@ -38,18 +38,19 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.composition.Forwa
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftLeft;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lift.LiftRight;
+import edu.cornell.cs.nlp.utils.log.Log;
 
 public class TestServices {
 
 	public static final LogicalExpressionCategoryServices	CATEGORY_SERVICES;
 	public static final TowerCategoryServices				TOWER_CATEGORY_SERVICES;
-	public static final MonadServices MONAD_SERVICES;
+	public static final MonadCategoryServices MONAD_SERVICES;
 
 	public static final List<File>							DEFAULT_ONTOLOGY_FILES;
 	public static final File								DEFAULT_TYPES_FILE;
 
 	public static final BinaryRuleSet<LogicalExpression> BASE_RULES;
-	public static final List<IRecursiveBinaryParseRule<LogicalExpression>> RECURSIVE_RULES;
+	public static final List<IBinaryReversibleRecursiveParseRule<LogicalExpression>> RECURSIVE_RULES;
 	public static final List<IBinaryReversibleParseRule<LogicalExpression>> BASE_REVERSIBLE_RULES;
 
 	private TestServices() {
@@ -95,8 +96,13 @@ public class TestServices {
 		// CCG LogicalExpression category services for handling categories
 		// with LogicalExpression as semantics
 		CATEGORY_SERVICES = new LogicalExpressionCategoryServices(true);
-		MONAD_SERVICES = new MonadServices();
-		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true, MONAD_SERVICES);
+		MONAD_SERVICES = new MonadCategoryServices();
+		TOWER_CATEGORY_SERVICES = new TowerCategoryServices(true);
+
+		// //////////////////////////////////////////////////
+		// Initialize monad services
+		// //////////////////////////////////////////////////
+		MonadServices.setInstance(new MonadServices.Builder().build());
 
 		List<IBinaryParseRule<LogicalExpression>> baseRules = new ArrayList<>();
 		baseRules.add(new ForwardApplication<>(CATEGORY_SERVICES));
@@ -109,17 +115,24 @@ public class TestServices {
 		Set<String> attributes = new HashSet<>();
 		attributes.add("sg");
 		attributes.add("pl");
-		baseReversibleRules.add(new ForwardReversibleApplication(
-				CATEGORY_SERVICES, 3, 9, true, attributes));
+		ForwardReversibleApplication forwardApp = new ForwardReversibleApplication(
+				CATEGORY_SERVICES, 3, 9, true, attributes);
+		baseReversibleRules.add(forwardApp);
 		baseReversibleRules.add(new BackwardReversibleApplication(
 				CATEGORY_SERVICES, 3, 9, true, attributes));
 		BASE_REVERSIBLE_RULES = baseReversibleRules;
 
 
 		RECURSIVE_RULES = new ArrayList<>();
-		RECURSIVE_RULES.add(new Combination<>("C", TOWER_CATEGORY_SERVICES, BASE_RULES));
-		RECURSIVE_RULES.add(new LiftLeft<>("^", TOWER_CATEGORY_SERVICES, BASE_RULES));
-		RECURSIVE_RULES.add(new LiftRight<>("^", TOWER_CATEGORY_SERVICES, BASE_RULES));
+		RECURSIVE_RULES.add(new ReversibleCombination("C", TOWER_CATEGORY_SERVICES, BASE_RULES, new HashSet<>(baseReversibleRules), forwardApp));
+		RECURSIVE_RULES.add(new ReversibleLiftLeft("^", TOWER_CATEGORY_SERVICES, BASE_RULES, new HashSet<>(baseReversibleRules), forwardApp));
+		RECURSIVE_RULES.add(new ReversibleLiftRight("^", TOWER_CATEGORY_SERVICES, BASE_RULES, new HashSet<>(baseReversibleRules), forwardApp));
+
+		for (IBinaryReversibleRecursiveParseRule<LogicalExpression> rule : RECURSIVE_RULES) {
+			for (IBinaryReversibleRecursiveParseRule<LogicalExpression> toAdd : RECURSIVE_RULES) {
+				rule.addRecursiveRule(toAdd);
+			}
+		}
 	}
 
 	public static LogicalExpressionCategoryServices getCategoryServices() {
@@ -134,7 +147,7 @@ public class TestServices {
 	    return TOWER_CATEGORY_SERVICES;
 	}
 
-	public static MonadServices getMonadServices() {
+	public static MonadCategoryServices getMonadServices() {
 		return MONAD_SERVICES;
 	}
 
@@ -142,7 +155,7 @@ public class TestServices {
 		return BASE_RULES;
 	}
 
-	public static List<IRecursiveBinaryParseRule<LogicalExpression>> getRecursiveRules() {
+	public static List<IBinaryReversibleRecursiveParseRule<LogicalExpression>> getRecursiveRules() {
 		return RECURSIVE_RULES;
 	}
 

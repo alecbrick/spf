@@ -48,7 +48,9 @@ import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpressionReader;
 import edu.cornell.cs.nlp.spf.mr.lambda.SkolemId;
 import edu.cornell.cs.nlp.spf.mr.lambda.SkolemServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.LogicalExpressionCategoryServices;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.MonadCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.ccg.SimpleFullParseFilter;
+import edu.cornell.cs.nlp.spf.mr.lambda.ccg.TowerCategoryServices;
 import edu.cornell.cs.nlp.spf.mr.lambda.comparators.SkolemIdInsensitiveComparator;
 import edu.cornell.cs.nlp.spf.mr.lambda.comparators.StructureOnlyComaprator;
 import edu.cornell.cs.nlp.spf.mr.lambda.printers.ILogicalExpressionPrinter;
@@ -193,6 +195,13 @@ public class ParseUtil extends DistributedExperiment {
 
 		this.categoryServices = new LogicalExpressionCategoryServices(true);
 		storeResource(CATEGORY_SERVICES_RESOURCE, categoryServices);
+
+		// //////////////////////////////////////////////////
+		// Tower category services.
+		// //////////////////////////////////////////////////
+
+		storeResource(TOWER_CATEGORY_SERVICES_RESOURCE,
+				new TowerCategoryServices(true));
 
 		// //////////////////////////////////////////////////
 		// Read resources.

@@ -93,6 +93,18 @@ public class Binding extends Monad {
 		return rightMonad.exec(leftOutput, bindings);
 	}
 
+	@Override
+	public MonadParams exec() {
+        assert(!(left instanceof Variable) && !(right instanceof Variable));
+		Monad leftMonad = (Monad) left;
+		Monad rightMonad = (Monad) right;
+		MonadParams leftOutput = leftMonad.exec();
+		LogicalExpression logicalOut = leftOutput.getOutput();
+		Map<Variable, LogicalExpression> bindings = new HashMap<>();
+		bindings.put(this.variable, logicalOut);
+		return rightMonad.exec(leftOutput, bindings);
+	}
+
 
 	@Override
 	public LogicalExpression getBody() {

@@ -25,21 +25,14 @@ import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
-import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.MakeApplicationSplits;
-import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.MakeCompositionSplits;
-import edu.cornell.cs.nlp.spf.genlex.ccg.unification.split.SplittingServices.SplittingPair;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
-import edu.cornell.cs.nlp.spf.mr.lambda.visitor.AllSubExpressions;
-import edu.cornell.cs.nlp.spf.mr.lambda.visitor.IsContainingVariable;
-import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ReplaceExpression;
 import edu.cornell.cs.nlp.spf.mr.language.type.MonadType;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IRecursiveBinaryParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryRecursiveParseRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleRecursiveParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.monadic.IMonadServices;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.TowerRule;
-import edu.cornell.cs.nlp.utils.composites.Pair;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
@@ -71,171 +64,19 @@ public class ReversibleTowerRule extends
 	private final List<IBinaryReversibleParseRule<LogicalExpression>> baseRules;
 
 	private final ForwardReversibleApplication forwardApp;
-	private final IMonadServices<LogicalExpression, Monad> monadServices;
+
+	private final List<IBinaryReversibleRecursiveParseRule<LogicalExpression>> recursiveParseRules;
 
 	public ReversibleTowerRule(ITowerCategoryServices<LogicalExpression> towerCategoryServices,
-							   List<IRecursiveBinaryParseRule<LogicalExpression>> validRules,
+							   List<IBinaryReversibleRecursiveParseRule<LogicalExpression>> validRules,
 							   ICategoryServices<LogicalExpression> categoryServices,
-							   IMonadServices<LogicalExpression, Monad> monadServices,
 							   List<IBinaryReversibleParseRule<LogicalExpression>> baseRules,
 							   ForwardReversibleApplication forwardApp) {
-		super(towerCategoryServices, validRules);
+		super(towerCategoryServices, new ArrayList<>(validRules));
+		this.recursiveParseRules = validRules;
 		this.categoryServices = categoryServices;
 		this.baseRules = baseRules;
-		this.monadServices = monadServices;
 		this.forwardApp = forwardApp;
-	}
-
-	// TODO: Refactor because this is a mess
-    private List<TowerCategory<LogicalExpression>> towerMonadicUnlower(TowerCategory towerCategory) {
-		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
-		Tower tower = (Tower) towerCategory.getSemantics();
-		TowerSyntax towerSyntax = towerCategory.getSyntax();
-		Lambda top = tower.getTop();
-		ComplexSyntax topSyntax = new ComplexSyntax(towerSyntax.getLeft(), towerSyntax.getRight(), Slash.FORWARD);
-		Set<SplittingPair> pairs = MakeCompositionSplits.of(Category.create(topSyntax, top), categoryServices);
-		for (SplittingPair pair : pairs) {
-			Tower newTower = new Tower((Lambda) pair.getRight().getSemantics(), tower.getBottom());
-			TowerCategory<LogicalExpression> newTowerCategory = new TowerCategory<>(towerSyntax, newTower);
-			// note - not necessarily monadic
-			List<TowerCategory<LogicalExpression>> results = monadicUnlower(newTowerCategory);
-			for (TowerCategory<LogicalExpression> result : results) {
-				TowerSyntax resultSyntax = new TowerSyntax(result.getSyntax(), Syntax.S, Syntax.S);
-				Tower resultSemantics = new Tower((Lambda) pair.getLeft().getSemantics(), result.getSemantics());
-				ret.add(new TowerCategory<>(resultSyntax, resultSemantics));
-			}
-		}
-
-		return ret;
-	}
-
-	private TowerCategory<LogicalExpression> complexMonadicUnlower(ComplexCategory complexCategory,
-																		 StateMonad exp) {
-		TowerSyntax newSyntax = new TowerSyntax(complexCategory.getSyntax(), Syntax.S, Syntax.S);
-		Lambda lambda = (Lambda) complexCategory.getSemantics();
-		// TODO: Is this something we need?
-		/*
-        if (exp.getState().size() > 0) {
-            return null;
-        } */
-        if (!IsContainingVariable.of(exp, lambda.getArgument())) {
-            return null;
-        }
-        Variable newVar = new Variable(
-                LogicLanguageServices.getTypeRepository()
-                    .generalizeType(exp.getType()));
-        Lambda newTop = new Lambda(newVar, ReplaceExpression.of(
-        		lambda.getBody(), exp, newVar));
-
-        // new top should NOT have bottom lambda variable
-        if (IsContainingVariable.of(newTop, lambda.getArgument())) {
-            return null;
-        }
-        for (LogicalExpression body : monadServices.logicalExpressionFromMonad(exp)) {
-            // TODO: Use this as new body (when refactoring lower)
-		}
-        Lambda newBottom = new Lambda(lambda.getArgument(), exp.getBody());
-        Tower newTower = new Tower(newTop, newBottom);
-        return new TowerCategory<>(newSyntax, newTower);
-	}
-
-	private List<TowerCategory<LogicalExpression>> monadicUnlower(Category<LogicalExpression> cat) {
-		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
-		LogicalExpression inputSem = cat.getSemantics();
-	    if (cat instanceof TowerCategory) {
-	    	inputSem = towerCategoryServices.towerToLambda(inputSem);
-		}
-	    Set<LogicalExpression> toUnlower = new HashSet<>();
-	    toUnlower.add(inputSem);
-	    if (cat.getSemantics().getType() instanceof MonadType) {
-	        toUnlower.addAll(monadServices.unexecMonad((Monad) cat.getSemantics()));
-		}
-	    for (LogicalExpression sem : toUnlower) {
-			for (LogicalExpression exp : AllSubExpressions.of(sem)) {
-				if (!(exp instanceof StateMonad)) {
-					continue;
-				}
-				StateMonad monadExp = (StateMonad) exp;
-				if (cat instanceof ComplexCategory) {
-					ComplexCategory complexCategory = (ComplexCategory) cat;
-					ComplexSyntax complexSyntax = complexCategory.getSyntax();
-					if (complexSyntax.getLeft().equals(Syntax.S)) {
-						// case 2
-						TowerCategory<LogicalExpression> result =
-								complexMonadicUnlower(complexCategory, monadExp);
-						if (result != null) {
-							ret.add(result);
-						}
-					}
-				}
-				// case 1, applicable if monad
-				TowerSyntax newSyntax = new TowerSyntax(Syntax.S, cat.getSyntax(), Syntax.S);
-				// TODO: Do we need this?
-                /*
-                if (monadExp.getState().size() > 0) {
-                    return ret;
-                }
-                */
-				Variable newVar = new Variable(
-						LogicLanguageServices.getTypeRepository()
-								.generalizeType(exp.getType()));
-				Lambda newTop = new Lambda(newVar, ReplaceExpression.of(sem, exp, newVar));
-				for (LogicalExpression body : monadServices.logicalExpressionFromMonad(monadExp)) {
-					ret.add(new TowerCategory<>(newSyntax, new Tower(newTop, body)));
-				}
-			}
-		}
-	    return ret;
-	}
-
-	public List<TowerCategory<LogicalExpression>> unlower(Category<LogicalExpression> cat) {
-	    // We need to use MakeApplicationSplits rather than just getting
-		// subexpressions since we need to split into ALL possible
-		// pairs such that left(right) = original.
-        Syntax syn = cat.getSyntax();
-		LogicalExpression sem = cat.getSemantics();
-		if (cat instanceof TowerCategory) {
-			TowerCategory towerCat = (TowerCategory) cat;
-			syn = new ComplexSyntax(towerCat.getSyntax().getLeft(), towerCat.getSyntax().getRight(), Slash.FORWARD);
-			sem = towerCategoryServices.towerToLambda(sem);
-		}
-		Set<SplittingPair> baseSplits = MakeApplicationSplits.of(
-				Category.create(syn, sem), categoryServices);
-		List<TowerCategory<LogicalExpression>> ret = new ArrayList<>();
-		// For each possible split, create a new tower
-		Set<Pair<Lambda, LogicalExpression>> semPairs = new HashSet<>();
-		for (SplittingPair split : baseSplits) {
-			if (!split.getRight().getSyntax().equals(Syntax.S)) {
-				continue;
-			}
-			Category<LogicalExpression> top = split.getLeft();
-			// Must be a forward application
-			if (!(top instanceof ComplexCategory) ||
-					!((ComplexSyntax) top.getSyntax()).getRight().equals(
-							split.getRight().getSyntax())) {
-				continue;
-			}
-			if (!(top.getSemantics() instanceof Lambda)) {
-				continue;
-			}
-			// Remove \x.x tower tops. (Idk if this works but it might be big for reducing splits)
-			Lambda leftLambda = (Lambda) split.getLeft().getSemantics();
-			if (leftLambda.getArgument().equals(leftLambda.getBody())) {
-				continue;
-			}
-			semPairs.add(Pair.of((Lambda) split.getLeft().getSemantics(), split.getRight().getSemantics()));
-		}
-		ret.addAll(monadicUnlower(cat));
-		// Only add semantic splits, because we only care about those
-		for (Pair<Lambda, LogicalExpression> semPair : semPairs) {
-			TowerSyntax newTowerSyntax = new TowerSyntax(Syntax.S, cat.getSyntax(), Syntax.S);
-			Tower newTowerSemantics = new Tower(
-					semPair.first(),
-					semPair.second());
-			TowerCategory<LogicalExpression> newTower = new TowerCategory<>(newTowerSyntax, newTowerSemantics);
-			ret.add(newTower);
-		}
-		return ret;
 	}
 
 	private List<ComplexCategory<LogicalExpression>> towerToList(
@@ -300,7 +141,7 @@ public class ReversibleTowerRule extends
 		    // Possible monadic unlower (for Lower Left/Right)
 		    for (Category<LogicalExpression> cat : rightResults) {
 		    	if (cat.getSemantics().getType() instanceof MonadType) {
-		    		ret.addAll(monadicUnlower(cat));
+		    		ret.addAll(towerCategoryServices.unlower(cat));
 				}
 			}
 		    ret.addAll(rightResults);
@@ -386,11 +227,30 @@ public class ReversibleTowerRule extends
 	}
 
 	@Override
-    // TODO: Reverse monadic base methods
+	public Set<Category<LogicalExpression>> reverseApplyLeft(Category<LogicalExpression> left, Category<LogicalExpression> result, SentenceSpan span) {
+		// Unlower here
+		Set<Category<LogicalExpression>> possibleResults = new HashSet<>();
+		possibleResults.add(result);
+		if (result instanceof TowerCategory) {
+			possibleResults.addAll(towerCategoryServices.unlower(result));
+		}
+
+		// TODO: Reverse monadic base methods
+		Set<Category<LogicalExpression>> ret = new HashSet<>();
+		for (Category<LogicalExpression> res : possibleResults) {
+            for (IBinaryReversibleParseRule<LogicalExpression> rule : this.recursiveParseRules) {
+                ret.addAll(rule.reverseApplyLeft(left, res, span));
+            }
+		}
+		return ret;
+	}
+
+	/*
+	@Override
 	public Set<Category<LogicalExpression>> reverseApplyLeft(Category<LogicalExpression> left, Category<LogicalExpression> result, SentenceSpan span) {
 		List<Category<LogicalExpression>> possibleResults = new ArrayList<>();
 		if (!(result instanceof TowerCategory) || result.height() < 2) {
-			for (Category<LogicalExpression> res : unlower(result)) {
+			for (Category<LogicalExpression> res : towerCategoryServices.unlower(result)) {
 				if (res.height() >= left.height()) {
 					possibleResults.add(res);
 				}
@@ -437,11 +297,25 @@ public class ReversibleTowerRule extends
 			}
 		}
 		return ret;
-	}
+	}*/
 
 	@Override
 	public Set<Category<LogicalExpression>> reverseApplyRight(Category<LogicalExpression> right, Category<LogicalExpression> result, SentenceSpan span) {
-	    throw new NoSuchMethodError();
+        // Unlower here
+		Set<Category<LogicalExpression>> possibleResults = new HashSet<>();
+		possibleResults.add(result);
+		if (result instanceof TowerCategory) {
+			possibleResults.addAll(towerCategoryServices.unlower(result));
+		}
+
+		// TODO: Reverse monadic base methods
+		Set<Category<LogicalExpression>> ret = new HashSet<>();
+		for (Category<LogicalExpression> res : possibleResults) {
+            for (IBinaryReversibleParseRule<LogicalExpression> rule : this.recursiveParseRules) {
+                ret.addAll(rule.reverseApplyRight(right, res, span));
+            }
+		}
+		return ret;
 	}
 
 	public class ReversibleTowerRuleCreator implements
@@ -461,11 +335,19 @@ public class ReversibleTowerRule extends
         @Override
         public ReversibleTowerRule create(ParameterizedExperiment.Parameters params,
 													   IResourceRepository repo) {
-            List<IRecursiveBinaryParseRule<LogicalExpression>> recursiveRules = new ArrayList<>();
+            List<IBinaryReversibleRecursiveParseRule<LogicalExpression>> recursiveRules = new ArrayList<>();
             for (String id : params.getSplit("recursiveRules")) {
-                IRecursiveBinaryParseRule<LogicalExpression> rule = repo.get(id);
+                IBinaryReversibleRecursiveParseRule<LogicalExpression> rule = repo.get(id);
                 recursiveRules.add(rule);
             }
+
+            // Recursive rules can't add themselves.
+			// As such, the list of recursive rules is specified here.
+            for (IBinaryReversibleRecursiveParseRule<LogicalExpression> rule : recursiveRules) {
+            	for (IBinaryReversibleRecursiveParseRule<LogicalExpression> toAdd : recursiveRules) {
+            		rule.addRecursiveRule(toAdd);
+				}
+			}
 
             List<IBinaryReversibleParseRule<LogicalExpression>> baseRules = new ArrayList<>();
             ForwardReversibleApplication forwardApp = null;
@@ -481,14 +363,11 @@ public class ReversibleTowerRule extends
 					repo.get(ParameterizedExperiment.CATEGORY_SERVICES_RESOURCE);
 			ITowerCategoryServices<LogicalExpression> towerCategoryServices =
 					repo.get(ParameterizedExperiment.TOWER_CATEGORY_SERVICES_RESOURCE);
-			IMonadServices<LogicalExpression, Monad> monadServices =
-					repo.get(ParameterizedExperiment.MONAD_SERVICES_RESOURCE);
 
             return new ReversibleTowerRule(
             		towerCategoryServices,
 					recursiveRules,
 					categoryServices,
-					monadServices,
 					baseRules,
 					forwardApp);
         }

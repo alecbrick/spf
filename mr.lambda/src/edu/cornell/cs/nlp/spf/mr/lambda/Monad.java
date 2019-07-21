@@ -49,6 +49,8 @@ public abstract class Monad extends LogicalExpression {
 		return exec(arg, new HashMap<>());
 	}
 
+	public abstract MonadParams exec();
+
 	public abstract LogicalExpression getBody();
 
 	public static class Reader implements IReader<Monad> {
