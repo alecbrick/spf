@@ -19,9 +19,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetBindingMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ReplaceExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.AbstractBinaryRecursiveParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.combination.Combination;
-import edu.cornell.cs.nlp.utils.log.Log;
 
 import java.util.*;
 
@@ -81,8 +79,8 @@ public class ReversibleCombination extends Combination<LogicalExpression> implem
 
         Map<Variable, Variable> mapping = GetBindingMapping.of(resultSem.getTop(), leftSem.getTop());
 
-        Category<LogicalExpression> leftBase = towerCategoryServices.getBase(leftTower);
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(resultTower);
+        Category<LogicalExpression> leftBase = towerCategoryServices.getBottom(leftTower);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(resultTower);
 
         if (mapping.size() > 0) {
             LogicalExpression leftBaseSem = leftBase.getSemantics();
@@ -156,8 +154,8 @@ public class ReversibleCombination extends Combination<LogicalExpression> implem
 
         Map<Variable, Variable> mapping = GetBindingMapping.of(resultSem.getTop(), rightSem.getTop());
 
-        Category<LogicalExpression> rightBase = towerCategoryServices.getBase(rightTower);
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(resultTower);
+        Category<LogicalExpression> rightBase = towerCategoryServices.getBottom(rightTower);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(resultTower);
 
         if (mapping.size() > 0) {
             LogicalExpression rightBaseSem = rightBase.getSemantics();

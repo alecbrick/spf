@@ -31,7 +31,9 @@ import java.util.Set;
  */
 public interface ITowerCategoryServices<MR> extends Serializable {
 
-	Category<MR> getBase(Category<MR> cat);
+    // These get the very bottom of the input tower, which is different than its "base" category.
+	Category<MR> getBottom(Category<MR> cat);
+	Category<MR> setBottom(Category<MR> cat, Category<MR> newBase);
 
 	MR getTopSemantics(TowerCategory<MR> tower);
 

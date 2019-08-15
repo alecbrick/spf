@@ -88,7 +88,9 @@ public abstract class Syntax implements Serializable {
 	}
 
 	public static Syntax read(String string) {
-		if (string.contains("//") && string.contains("\\\\")) {
+		if (string.startsWith("<") && string.endsWith(">")) {
+			return DelimitSyntax.read(string);
+		} else if (string.contains("//") && string.contains("\\\\")) {
 			return TowerSyntax.read(string);
 		} else if (string.indexOf('\\') != -1 || string.indexOf('/') != -1
 				|| string.indexOf('|') != -1) {

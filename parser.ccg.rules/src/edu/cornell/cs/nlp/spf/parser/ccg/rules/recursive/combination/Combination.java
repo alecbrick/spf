@@ -46,8 +46,8 @@ public class Combination<MR> extends AbstractBinaryRecursiveParseRule<MR> {
 
 
 
-        Category<MR> leftBase = towerCategoryServices.getBase(leftTower);
-        Category<MR> rightBase = towerCategoryServices.getBase(rightTower);
+        Category<MR> leftBase = towerCategoryServices.getBottom(leftTower);
+        Category<MR> rightBase = towerCategoryServices.getBottom(rightTower);
         List<ParseRuleResult<MR>> results = combineRecursive(leftBase, rightBase, span, validRules);
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
         for (ParseRuleResult<MR> result : results) {

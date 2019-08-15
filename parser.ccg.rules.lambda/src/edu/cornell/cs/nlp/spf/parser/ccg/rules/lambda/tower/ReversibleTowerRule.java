@@ -19,7 +19,6 @@ package edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.tower;
 import edu.cornell.cs.nlp.spf.ccg.categories.*;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
-import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
@@ -28,7 +27,6 @@ import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.language.type.MonadType;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleParseRule;
-import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryRecursiveParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleRecursiveParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
@@ -89,7 +87,7 @@ public class ReversibleTowerRule extends
 			ret.add(0, new ComplexCategory<>(
 					new ComplexSyntax(syntax.getLeft(), syntax.getRight(), Slash.FORWARD),
 					semantics.getTop()));
-			cat = towerCategoryServices.getBase(tower);
+			cat = towerCategoryServices.getBottom(tower);
 		}
         return ret;
 	}
@@ -286,9 +284,9 @@ public class ReversibleTowerRule extends
 
 		Set<Category<LogicalExpression>> ret = new HashSet<>();
 		for (Category<LogicalExpression> possibleLeft : lefts) {
-            Category<LogicalExpression> leftBase = towerCategoryServices.getBase(possibleLeft);
+            Category<LogicalExpression> leftBase = towerCategoryServices.getBottom(possibleLeft);
             for (Category<LogicalExpression> res : possibleResults) {
-				Category<LogicalExpression> resBase = towerCategoryServices.getBase(res);
+				Category<LogicalExpression> resBase = towerCategoryServices.getBottom(res);
 				List<Category<LogicalExpression>> rightBases = new ArrayList<>();
 				for (IBinaryReversibleParseRule<LogicalExpression> rule : baseRules) {
 					rightBases.addAll(rule.reverseApplyLeft(leftBase, resBase, span));

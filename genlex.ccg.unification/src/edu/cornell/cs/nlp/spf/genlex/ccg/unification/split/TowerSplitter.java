@@ -31,7 +31,6 @@ import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.*;
 import edu.cornell.cs.nlp.spf.mr.language.type.MonadType;
 import edu.cornell.cs.nlp.utils.composites.Pair;
-import edu.cornell.cs.nlp.utils.log.Log;
 
 import java.util.*;
 
@@ -204,7 +203,7 @@ public class TowerSplitter extends Splitter {
         if (category instanceof TowerCategory) {
 			// Since we're unlowering a tower, we can have multiple original tower tops and bottoms
 			TowerCategory<LogicalExpression> tower = (TowerCategory<LogicalExpression>) category;
-			Category<LogicalExpression> base = towerCategoryServices.getBase(tower);
+			Category<LogicalExpression> base = towerCategoryServices.getBottom(tower);
 			/* TODO: Probably isn't necessary. I think we want lowers to be "one fell swoop" lowers.
 			// Unlower the base of a tower.
 			/*

@@ -1,13 +1,20 @@
 package edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.Category;
+import edu.cornell.cs.nlp.spf.ccg.categories.ComplexCategory;
 import edu.cornell.cs.nlp.spf.ccg.categories.ITowerCategoryServices;
 import edu.cornell.cs.nlp.spf.ccg.categories.TowerCategory;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.DelimitSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.primitivebinary.application.ForwardApplication;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.delimit.AbstractDelimit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,11 +58,18 @@ public class TowerRule<MR> implements IBinaryRecursiveParseRule<MR> {
             return Collections.emptyList();
         }
 
-        // TODO: delimiting, base pre-computation
+        // We only want to allow AbstractDelimit as a top-level rule. (I think.)
+        List<IBinaryRecursiveParseRule<MR>> rulesToUse = new ArrayList<>();
+        for (IBinaryRecursiveParseRule<MR> rule : recursiveRules) {
+            if (!(rule instanceof AbstractDelimit)) {
+                rulesToUse.add(rule);
+            }
+        }
+
 
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
         for (IBinaryRecursiveParseRule<MR> rule : recursiveRules) {
-            for (ParseRuleResult<MR> result : rule.applyRecursive(left, right, span, recursiveRules)) {
+            for (ParseRuleResult<MR> result : rule.applyRecursive(left, right, span, rulesToUse)) {
                 ret.add(result);
                 Category<MR> resultCategory = result.getResultCategory();
                 if (!(resultCategory instanceof TowerCategory)) {
