@@ -54,7 +54,7 @@ public class ReversibleLiftLeft extends LiftLeft<LogicalExpression>
         if (!(result instanceof TowerCategory)) {
             return ret;
         }
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(result);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(result);
         Set<Category<LogicalExpression>> bases = new HashSet<>();
         if (!(left instanceof TowerCategory) && !(resultBase instanceof TowerCategory)) {
             for (IBinaryReversibleParseRule<LogicalExpression> rule : reversibleBaseRules) {
@@ -70,9 +70,8 @@ public class ReversibleLiftLeft extends LiftLeft<LogicalExpression>
         Tower resultSemantics = (Tower) resultTower.getSemantics();
         for (Category<LogicalExpression> base : bases) {
             ret.add(new TowerCategory<>(
-                    new TowerSyntax(
-                        resultSyntax.getLeft(), resultSyntax.getRight(),
-                            base.getSyntax()),
+                    new TowerSyntax(base.getSyntax(),
+                        resultSyntax.getLeft(), resultSyntax.getRight()),
                     new Tower(resultSemantics.getTop(), base.getSemantics())
             ));
         }
@@ -105,8 +104,8 @@ public class ReversibleLiftLeft extends LiftLeft<LogicalExpression>
 
         Map<Variable, Variable> mapping = GetBindingMapping.of(resultSem.getTop(), rightSem.getTop());
 
-        Category<LogicalExpression> rightBase = towerCategoryServices.getBottom(rightTower);
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(resultTower);
+        Category<LogicalExpression> rightBase = towerCategoryServices.getBase(rightTower);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(resultTower);
 
         if (mapping.size() > 0) {
             LogicalExpression rightBaseSem = rightBase.getSemantics();

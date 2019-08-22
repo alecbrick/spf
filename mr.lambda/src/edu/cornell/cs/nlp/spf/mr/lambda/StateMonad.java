@@ -29,6 +29,7 @@ import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,7 +81,7 @@ public class StateMonad extends Monad {
 	public MonadParams exec(MonadParams args, Map<Variable, LogicalExpression> bindings) {
 	    StateMonadParams input = (StateMonadParams) args;
 	    state.add(input.getState());
-		Set<Variable> bindingVars = bindings.keySet();
+		Set<Variable> bindingVars = new HashSet<>(bindings.keySet());
 		bindingVars.retainAll(body.getFreeVariables());
 		LogicalExpression tempResult = body;
 		for (Variable v : bindingVars) {
@@ -124,10 +125,10 @@ public class StateMonad extends Monad {
         if (type != other.type) {
         	return false;
 		}
-        if (!state.equals(other.state, mapping)) {
+        if (!body.equals(other.body, mapping)) {
         	return false;
 		}
-        return body.equals(other.body, mapping);
+        return state.equals(other.state, mapping);
 	}
 
     @Override

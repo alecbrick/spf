@@ -17,9 +17,7 @@
 package edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.tower;
 
 import edu.cornell.cs.nlp.spf.ccg.categories.*;
-import edu.cornell.cs.nlp.spf.ccg.categories.syntax.ComplexSyntax;
-import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Slash;
-import edu.cornell.cs.nlp.spf.ccg.categories.syntax.TowerSyntax;
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.*;
 import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
@@ -31,6 +29,7 @@ import edu.cornell.cs.nlp.spf.parser.ccg.rules.IBinaryReversibleRecursiveParseRu
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.lambda.application.ForwardReversibleApplication;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.TowerRule;
+import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.delimit.DelimitRight;
 import edu.cornell.cs.nlp.utils.log.ILogger;
 import edu.cornell.cs.nlp.utils.log.LoggerFactory;
 
@@ -87,7 +86,7 @@ public class ReversibleTowerRule extends
 			ret.add(0, new ComplexCategory<>(
 					new ComplexSyntax(syntax.getLeft(), syntax.getRight(), Slash.FORWARD),
 					semantics.getTop()));
-			cat = towerCategoryServices.getBottom(tower);
+			cat = towerCategoryServices.getBase(tower);
 		}
         return ret;
 	}
@@ -233,8 +232,24 @@ public class ReversibleTowerRule extends
 			possibleResults.addAll(towerCategoryServices.unlower(result));
 		}
 
-		// TODO: Reverse monadic base methods
+		// only delimit right is possible here
 		Set<Category<LogicalExpression>> ret = new HashSet<>();
+		Syntax leftBottomSyntax = towerCategoryServices.getBottom(left).getSyntax();
+		if (leftBottomSyntax instanceof ComplexSyntax) {
+			ComplexSyntax complexSyntax = (ComplexSyntax) leftBottomSyntax;
+			if (complexSyntax.getRight() instanceof DelimitSyntax) {
+				for (IBinaryReversibleRecursiveParseRule<LogicalExpression> rule : this.recursiveParseRules) {
+					if (rule instanceof DelimitRight) {
+					    for (Category<LogicalExpression> res : possibleResults) {
+							ret.addAll(rule.reverseApplyLeft(left, res, span));
+						}
+					}
+				}
+				return ret;
+			}
+		}
+
+		// TODO: Reverse monadic base methods
 		for (Category<LogicalExpression> res : possibleResults) {
             for (IBinaryReversibleParseRule<LogicalExpression> rule : this.recursiveParseRules) {
                 ret.addAll(rule.reverseApplyLeft(left, res, span));
@@ -284,9 +299,9 @@ public class ReversibleTowerRule extends
 
 		Set<Category<LogicalExpression>> ret = new HashSet<>();
 		for (Category<LogicalExpression> possibleLeft : lefts) {
-            Category<LogicalExpression> leftBase = towerCategoryServices.getBottom(possibleLeft);
+            Category<LogicalExpression> leftBase = towerCategoryServices.getBase(possibleLeft);
             for (Category<LogicalExpression> res : possibleResults) {
-				Category<LogicalExpression> resBase = towerCategoryServices.getBottom(res);
+				Category<LogicalExpression> resBase = towerCategoryServices.getBase(res);
 				List<Category<LogicalExpression>> rightBases = new ArrayList<>();
 				for (IBinaryReversibleParseRule<LogicalExpression> rule : baseRules) {
 					rightBases.addAll(rule.reverseApplyLeft(leftBase, resBase, span));

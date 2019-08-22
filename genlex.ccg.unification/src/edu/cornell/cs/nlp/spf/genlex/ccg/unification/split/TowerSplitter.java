@@ -203,7 +203,7 @@ public class TowerSplitter extends Splitter {
         if (category instanceof TowerCategory) {
 			// Since we're unlowering a tower, we can have multiple original tower tops and bottoms
 			TowerCategory<LogicalExpression> tower = (TowerCategory<LogicalExpression>) category;
-			Category<LogicalExpression> base = towerCategoryServices.getBottom(tower);
+			Category<LogicalExpression> base = towerCategoryServices.getBase(tower);
 			/* TODO: Probably isn't necessary. I think we want lowers to be "one fell swoop" lowers.
 			// Unlower the base of a tower.
 			/*

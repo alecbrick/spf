@@ -60,7 +60,7 @@ public class LogicalExpressionToString implements ILogicalExpressionVisitor {
 		lambda.getBody().accept(this);
 		outputString.append(')');
 		// Pop the variable name.
-		variableIds.pop(lambda.getArgument());
+		//variableIds.pop(lambda.getArgument());
 	}
 
 	@Override

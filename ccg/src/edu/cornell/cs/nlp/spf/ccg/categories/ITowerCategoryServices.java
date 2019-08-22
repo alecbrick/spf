@@ -31,7 +31,10 @@ import java.util.Set;
  */
 public interface ITowerCategoryServices<MR> extends Serializable {
 
-    // These get the very bottom of the input tower, which is different than its "base" category.
+	Category<MR> getBase(Category<MR> cat);
+	Category<MR> setBase(Category<MR> cat, Category<MR> newBase);
+
+	// These get the very bottom of the input tower, which is different than its "base" category.
 	Category<MR> getBottom(Category<MR> cat);
 	Category<MR> setBottom(Category<MR> cat, Category<MR> newBase);
 
@@ -73,4 +76,7 @@ public interface ITowerCategoryServices<MR> extends Serializable {
 
 	MR lambdaToTower(MR lambda);
 
+	boolean hasTowerResult(Category<MR> cat);
+
+	Set<Category<MR>> reverseReset(Category<MR> cat);
 }

@@ -259,7 +259,7 @@ public class Binding extends Monad {
 				final LogicalExpression m1 = reader.read(
 						lispReader.next(), mapping, typeRepository,
 						typeComparator);
-				assert((m1 instanceof Variable) || (m1 instanceof Monad));
+				assert(m1.getType() instanceof MonadType);
 
 				// Add the bound variable to the mapping.
 				// We won't remove this variable from the mapping, because it can

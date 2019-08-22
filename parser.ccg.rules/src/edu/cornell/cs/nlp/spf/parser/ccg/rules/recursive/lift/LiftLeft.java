@@ -31,7 +31,7 @@ public class LiftLeft<MR> extends AbstractLift<MR> {
             return new ArrayList<>();
         }
         TowerCategory<MR> rightTower = (TowerCategory<MR>) right;
-        Category<MR> rightBase = towerCategoryServices.getBottom(rightTower);
+        Category<MR> rightBase = towerCategoryServices.getBase(rightTower);
 
         // Don't lift unnecessarily
         // TODO i think it's broken

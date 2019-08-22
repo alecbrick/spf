@@ -365,6 +365,11 @@ public class GetApplicationFunction implements ILogicalExpressionVisitor {
 				result = stateM;
 				return;
 			}
+			if (stateM.equals(applicationArgument)) {
+				result = applicationVariable;
+				subExpReplaced = true;
+				return;
+			}
 			stateM.getBody().accept(this);
 			if (result != stateM.getBody()) {
 				result = new StateMonad(result, stateM.getState());
@@ -382,6 +387,11 @@ public class GetApplicationFunction implements ILogicalExpressionVisitor {
 		try {
 			if (currentDepth > maxDepth) {
 				result = binding;
+				return;
+			}
+			if (binding.equals(applicationArgument)) {
+				result = applicationVariable;
+				subExpReplaced = true;
 				return;
 			}
 			binding.getLeft().accept(this);

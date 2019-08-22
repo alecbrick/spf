@@ -9,6 +9,7 @@ import edu.cornell.cs.nlp.spf.explat.IResourceRepository;
 import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
+import edu.cornell.cs.nlp.spf.mr.lambda.MonadServices;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class DelimitRight<MR> extends AbstractDelimit<MR> {
             Category<MR> right,
             SentenceSpan span,
             List<IBinaryRecursiveParseRule<MR>> validRules) {
-        Category<MR> leftBase = towerCategoryServices.getBottom(left);
+        Category<MR> leftBottom = towerCategoryServices.getBottom(left);
         Category<MR> rightBase = towerCategoryServices.getBottom(right);
 
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
@@ -34,8 +35,8 @@ public class DelimitRight<MR> extends AbstractDelimit<MR> {
             return ret;
         }
 
-        ComplexCategory<MR> complexLeftBase = (ComplexCategory<MR>) leftBase;
-        ComplexSyntax leftBaseSyntax = complexLeftBase.getSyntax();
+        ComplexCategory<MR> complexLeftBottom = (ComplexCategory<MR>) leftBottom;
+        ComplexSyntax leftBaseSyntax = complexLeftBottom.getSyntax();
         if (!leftBaseSyntax.getSlash().equals(Slash.FORWARD) ||
                 !(leftBaseSyntax.getRight() instanceof DelimitSyntax)) {
             return ret;
@@ -50,7 +51,7 @@ public class DelimitRight<MR> extends AbstractDelimit<MR> {
         if (right instanceof TowerCategory) {
             TowerCategory<MR> rightTower = (TowerCategory<MR>) right;
             Category<MR> loweredRight = towerCategoryServices.lower(rightTower);
-            newRight = towerCategoryServices.monadicLift(loweredRight, Syntax.S);
+            newRight = towerCategoryServices.monadicLift(loweredRight, MonadServices.getMonadSyntax());
             if (newRight == null) {
                 return ret;
             }
@@ -58,7 +59,7 @@ public class DelimitRight<MR> extends AbstractDelimit<MR> {
 
         ComplexSyntax newLeftBaseSyntax =
                 new ComplexSyntax(leftBaseSyntax.getLeft(), delimitedSyntax.getWrappedSyntax(), Slash.FORWARD);
-        Category<MR> newLeftBottom = Category.create(newLeftBaseSyntax, leftBase.getSemantics());
+        Category<MR> newLeftBottom = Category.create(newLeftBaseSyntax, leftBottom.getSemantics());
         Category<MR> newLeft = towerCategoryServices.setBottom(left, newLeftBottom);
 
 

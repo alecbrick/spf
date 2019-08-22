@@ -2,7 +2,7 @@ package edu.cornell.cs.nlp.spf.mr.lambda;
 
 public class StateMonadParams implements MonadParams {
 
-    State state;
+    State<SkolemId> state;
     LogicalExpression body;
 
     public StateMonadParams() {
@@ -19,7 +19,7 @@ public class StateMonadParams implements MonadParams {
         return body;
     }
 
-    public State getState(){
+    public State<SkolemId> getState(){
         return state;
     }
 }

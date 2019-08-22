@@ -26,15 +26,15 @@ public class DelimitLeft<MR> extends AbstractDelimit<MR> {
             Category<MR> right,
             SentenceSpan span,
             List<IBinaryRecursiveParseRule<MR>> validRules) {
-        Category<MR> leftBase = towerCategoryServices.getBottom(left);
-        Category<MR> rightBase = towerCategoryServices.getBottom(right);
+        Category<MR> leftBottom = towerCategoryServices.getBottom(left);
+        Category<MR> rightBottom = towerCategoryServices.getBottom(right);
 
         List<ParseRuleResult<MR>> ret = new ArrayList<>();
         if (!(right instanceof ComplexCategory)) {
             return ret;
         }
 
-        ComplexCategory<MR> complexRightBase = (ComplexCategory<MR>) rightBase;
+        ComplexCategory<MR> complexRightBase = (ComplexCategory<MR>) rightBottom;
         ComplexSyntax rightBaseSyntax = complexRightBase.getSyntax();
         if (!rightBaseSyntax.getSlash().equals(Slash.BACKWARD) ||
                 !(rightBaseSyntax.getRight() instanceof DelimitSyntax)) {
@@ -42,7 +42,7 @@ public class DelimitLeft<MR> extends AbstractDelimit<MR> {
         }
 
         DelimitSyntax delimitedSyntax = (DelimitSyntax) rightBaseSyntax.getRight();
-        if (!delimitedSyntax.getWrappedSyntax().equals(leftBase.getSyntax())) {
+        if (!delimitedSyntax.getWrappedSyntax().equals(leftBottom.getSyntax())) {
             return ret;
         }
 
@@ -58,7 +58,7 @@ public class DelimitLeft<MR> extends AbstractDelimit<MR> {
 
         ComplexSyntax newRightBaseSyntax =
                 new ComplexSyntax(rightBaseSyntax.getLeft(), delimitedSyntax.getWrappedSyntax(), Slash.BACKWARD);
-        Category<MR> newRightBottom = Category.create(newRightBaseSyntax, rightBase.getSemantics());
+        Category<MR> newRightBottom = Category.create(newRightBaseSyntax, rightBottom.getSemantics());
         Category<MR> newRight = towerCategoryServices.setBottom(right, newRightBottom);
 
 

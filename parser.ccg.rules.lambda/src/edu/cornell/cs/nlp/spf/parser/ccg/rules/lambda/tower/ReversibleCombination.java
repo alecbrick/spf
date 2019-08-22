@@ -15,6 +15,7 @@ import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
 import edu.cornell.cs.nlp.spf.mr.lambda.Tower;
 import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
+import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ApplyAndSimplify;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetBindingMapping;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ReplaceExpression;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.*;
@@ -79,8 +80,8 @@ public class ReversibleCombination extends Combination<LogicalExpression> implem
 
         Map<Variable, Variable> mapping = GetBindingMapping.of(resultSem.getTop(), leftSem.getTop());
 
-        Category<LogicalExpression> leftBase = towerCategoryServices.getBottom(leftTower);
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(resultTower);
+        Category<LogicalExpression> leftBase = towerCategoryServices.getBase(leftTower);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(resultTower);
 
         if (mapping.size() > 0) {
             LogicalExpression leftBaseSem = leftBase.getSemantics();
@@ -136,26 +137,36 @@ public class ReversibleCombination extends Combination<LogicalExpression> implem
         Tower rightSem = (Tower) rightTower.getSemantics();
         Tower resultSem = (Tower) resultTower.getSemantics();
 
+
         Lambda rightTop = rightSem.getTop();
         Lambda resultTop = resultSem.getTop();
+        Variable resultArgument = resultTop.getArgument();
+        LogicalExpression appliedRight = ApplyAndSimplify.of(rightTop, resultArgument);
+
+        LogicalExpression topBodySemantics = resultSem.getTop().getBody();
+        if (resultSyntax.getLeft() instanceof TowerSyntax) {
+            topBodySemantics = towerCategoryServices.lambdaToTower(topBodySemantics);
+        }
 
         // split tops
         // We don't have reversible composition, so we emulate it
         // with reverse application.
         Set<Category<LogicalExpression>> leftTops =
                 forwardApp.reverseApplyRight(
-                    Category.create(rightSyntax.getLeft(), rightTop.getBody()),
+                    Category.create(rightSyntax.getLeft(), appliedRight),
                     Category.create(resultSyntax.getLeft(),
-                            resultTop.getBody()), span);
+                            topBodySemantics), span);
 
         if (leftTops.isEmpty()) {
             return ret;
         }
 
-        Map<Variable, Variable> mapping = GetBindingMapping.of(resultSem.getTop(), rightSem.getTop());
+        // Get a mapping between the binding variables so that we can keep track
+        // of them during recursion.
+        Map<Variable, Variable> mapping = GetBindingMapping.of(topBodySemantics, appliedRight);
 
-        Category<LogicalExpression> rightBase = towerCategoryServices.getBottom(rightTower);
-        Category<LogicalExpression> resultBase = towerCategoryServices.getBottom(resultTower);
+        Category<LogicalExpression> rightBase = towerCategoryServices.getBase(rightTower);
+        Category<LogicalExpression> resultBase = towerCategoryServices.getBase(resultTower);
 
         if (mapping.size() > 0) {
             LogicalExpression rightBaseSem = rightBase.getSemantics();

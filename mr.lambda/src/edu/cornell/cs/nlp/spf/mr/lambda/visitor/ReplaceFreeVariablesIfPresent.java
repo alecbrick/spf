@@ -16,17 +16,12 @@
  *******************************************************************************/
 package edu.cornell.cs.nlp.spf.mr.lambda.visitor;
 
+import edu.cornell.cs.nlp.spf.mr.lambda.*;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import edu.cornell.cs.nlp.spf.mr.lambda.Lambda;
-import edu.cornell.cs.nlp.spf.mr.lambda.Literal;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalConstant;
-import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
-import edu.cornell.cs.nlp.spf.mr.lambda.Variable;
 
 /**
  * Given a set of variables, replace instances of them in the given expression
@@ -149,6 +144,47 @@ public class ReplaceFreeVariablesIfPresent implements ILogicalExpressionVisitor 
 			result = oldVariablesToNew.get(variable);
 		} else {
 			result = variable;
+		}
+	}
+
+	@Override
+	public void visit(StateMonad stateM) {
+		if (!stateM.containsFreeVariables(variables)) {
+			result = stateM;
+			return;
+		}
+		stateM.getBody().accept(this);
+		if (result != stateM.getBody()) {
+			result = new StateMonad(result, stateM.getState());
+		} else {
+			result = stateM;
+		}
+	}
+
+	@Override
+	public void visit(Binding binding) {
+		if (!binding.containsFreeVariables(variables)) {
+			result = binding;
+			return;
+		}
+		binding.getLeft().accept(this);
+		LogicalExpression newLeft = result;
+
+        final Set<Variable> originalSet = variables;
+		if (variables.contains(binding.getVariable())) {
+			final Set<Variable> revisedVariables = new HashSet<>(
+					variables);
+			revisedVariables.remove(binding.getVariable());
+			variables = revisedVariables;
+		}
+		binding.getRight().accept(this);
+        variables = originalSet;
+
+		if (newLeft != binding.getLeft() ||
+				result != binding.getRight()) {
+			result = new Binding(newLeft, result, binding.getVariable());
+		} else {
+			result = binding;
 		}
 	}
 }

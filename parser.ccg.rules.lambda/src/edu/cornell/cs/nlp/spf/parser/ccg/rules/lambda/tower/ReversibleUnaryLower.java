@@ -8,6 +8,7 @@ import edu.cornell.cs.nlp.spf.explat.ParameterizedExperiment;
 import edu.cornell.cs.nlp.spf.explat.resources.IResourceObjectCreator;
 import edu.cornell.cs.nlp.spf.explat.resources.usage.ResourceUsage;
 import edu.cornell.cs.nlp.spf.mr.lambda.LogicalExpression;
+import edu.cornell.cs.nlp.spf.mr.lambda.MonadServices;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.IUnaryReversibleParseRule;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.SentenceSpan;
 import edu.cornell.cs.nlp.spf.parser.ccg.rules.recursive.lower.UnaryLower;
@@ -23,7 +24,8 @@ public class ReversibleUnaryLower extends UnaryLower<LogicalExpression>
 
     @Override
     public Set<Category<LogicalExpression>> reverseApply(Category<LogicalExpression> result, SentenceSpan span) {
-        if (!result.getSyntax().equals(Syntax.S)) {
+        if (!(result.getSyntax().equals(Syntax.S) ||
+				result.getSyntax().equals(MonadServices.getMonadSyntax()))) {
             return new HashSet<>();
         }
 

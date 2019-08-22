@@ -75,14 +75,16 @@ public class TowerRule<MR> implements IBinaryRecursiveParseRule<MR> {
                 if (!(resultCategory instanceof TowerCategory)) {
                     continue;
                 }
-                Category<MR> loweredCategory =
-                        towerCategoryServices.lower(
-                                (TowerCategory<MR>) resultCategory);
-                if (loweredCategory != null) {
-                    ret.add(new ParseRuleResult<>(
-                            RecursiveRuleName.create(
-                                    RULE_LABEL, result.getRuleName()),
-                            loweredCategory));
+                if (towerCategoryServices.hasTowerResult(resultCategory)) {
+                    Category<MR> loweredCategory =
+                            towerCategoryServices.lower(
+                                    (TowerCategory<MR>) resultCategory);
+                    if (loweredCategory != null) {
+                        ret.add(new ParseRuleResult<>(
+                                RecursiveRuleName.create(
+                                        RULE_LABEL, result.getRuleName()),
+                                loweredCategory));
+                    }
                 }
             }
         }

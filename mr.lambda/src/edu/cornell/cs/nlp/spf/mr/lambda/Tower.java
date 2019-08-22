@@ -220,6 +220,7 @@ public class Tower extends LogicalExpression
 				final String topString = topStringBuilder.toString().trim();
                 final String bottomString = innerString.substring(i).trim();
 
+                // TODO: Find the continuation hole and adjust mappings accordingly
                 final LogicalExpression topLogical = reader.read(
                 		topString, mapping, typeRepository, typeComparator);
                 if (!(topLogical instanceof Lambda)) {

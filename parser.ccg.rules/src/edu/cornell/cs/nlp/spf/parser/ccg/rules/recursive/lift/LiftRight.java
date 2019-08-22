@@ -32,7 +32,7 @@ public class LiftRight<MR> extends AbstractLift<MR> {
             return new ArrayList<>();
         }
         TowerCategory<MR> leftTower = (TowerCategory<MR>) left;
-        Category<MR> leftBase = towerCategoryServices.getBottom(leftTower);
+        Category<MR> leftBase = towerCategoryServices.getBase(leftTower);
 
         List<IBinaryRecursiveParseRule<MR>> newValidRules =
                 new ArrayList<>(validRules);

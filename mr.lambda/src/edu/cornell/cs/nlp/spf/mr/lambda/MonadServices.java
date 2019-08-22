@@ -1,7 +1,9 @@
 package edu.cornell.cs.nlp.spf.mr.lambda;
 
+import edu.cornell.cs.nlp.spf.ccg.categories.syntax.Syntax;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.AllSubExpressions;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetAllFreeVariables;
+import edu.cornell.cs.nlp.spf.mr.lambda.visitor.GetSkolemIds;
 import edu.cornell.cs.nlp.spf.mr.lambda.visitor.ReplaceExpression;
 import edu.cornell.cs.nlp.spf.mr.language.type.Type;
 
@@ -11,6 +13,14 @@ import java.util.Set;
 
 public class MonadServices {
     protected static MonadServices INSTANCE;
+
+    protected Syntax getMonadSyntaxImpl() {
+        return Syntax.S;
+    }
+
+    public static Syntax getMonadSyntax() {
+        return INSTANCE.getMonadSyntaxImpl();
+    }
 
     protected Monad logicalExpressionToMonadImpl(LogicalExpression exp) {
         return new StateMonad(exp);
@@ -29,7 +39,6 @@ public class MonadServices {
     public static Set<LogicalExpression> logicalExpressionFromMonad(Monad m) {
         return INSTANCE.logicalExpressionFromMonadImpl(m);
     }
-
 
     // A Binding can be executed, producing a monad.
     // For lexicon generation, this process must be reversible.
@@ -85,7 +94,10 @@ public class MonadServices {
             }
         } else if (exp instanceof StateMonad) {
             StateMonad monadExp = (StateMonad) exp;
-            return logicalExpressionToMonad(monadExp.getBody());
+            Set<SkolemId> state = new HashSet<>(monadExp.getState().getState());
+            Set<SkolemId> skolemIds = GetSkolemIds.of(monadExp);
+            state.retainAll(skolemIds);
+            return new StateMonad(monadExp.getBody(), new State<>(state));
         } else {
             return exp;
         }
